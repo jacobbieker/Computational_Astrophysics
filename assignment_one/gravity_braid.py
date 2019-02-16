@@ -20,17 +20,17 @@ def new_particles():
     
     particles.mass=[1.0,0.5,1.0] | nbody_system.mass
     particles.position = [
-        [-1, 1, 0],
+        [-1, 0.1, 0],
         [0, 0, 0],
-        [-1, 0, 0],
+        [1, 0.1, 0],
     ] | nbody_system.length
         
-    particles.velocity = [[0.2009656237,0.2431076328,0.0],[0.8038624948,0.9724305312,0.0],[0.2009656237,0.2431076328,0.0]] | nbody_system.speed
+    particles.velocity = [[0.2869236336,0.0791847624,0.0],[-1.1476945344,-0.3167390496,0],[0.2869236336,0.0791847624,0.0]] | nbody_system.speed
     particles.radius = 0 | nbody_system.length
     
     return particles
 
-def run_pyth(interface,tend=100,dt=0.125,parameters=[]):
+def run_pyth(interface,tend=1000,dt=0.125,parameters=[]):
   
     code = interface()
     
@@ -53,15 +53,12 @@ def run_pyth(interface,tend=100,dt=0.125,parameters=[]):
     return x,y
 
 if __name__ == "__main__":
-  codes_to_run=[ ('Hermite0, $\eta=0.03$', Hermite,  [("dt_param",0.03)] ),
-                 ('Hermite0, $\eta=0.01$', Hermite,  [("dt_param",0.01)] ),
-                 ('Hermite0, $\eta=0.003$', Hermite,  [("dt_param",0.003)] ),
-                 ('Hermite0, $\eta=0.001$', Hermite,  [("dt_param",0.001)] ) ]
+  codes_to_run=[ ('Hermite0, $\eta=0.03$', Hermite,  [("dt_param",0.03)] ) ]
   N=(len(codes_to_run)-1)/2+1
   f=pyplot.figure(figsize=(8,4*N))
   
   for i,(label,interface,parameters) in enumerate(codes_to_run):
-    x,y=run_pyth(interface,tend=100 | nbody_system.time ,dt=0.0625 | nbody_system.time,parameters=parameters)
+    x,y=run_pyth(interface,tend=1000 | nbody_system.time ,dt=0.0625 | nbody_system.time,parameters=parameters)
     x = x.value_in(nbody_system.length)
     y = y.value_in(nbody_system.length)
     subplot=f.add_subplot(N,2,i+1)
@@ -69,7 +66,6 @@ if __name__ == "__main__":
     subplot.plot(x[:,1],y[:,1],'b')
     subplot.plot(x[:,2],y[:,2],'g')
     subplot.set_title(label)
-    subplot.set_xlim(-8,8)
-    subplot.set_ylim(-6,6)
+    subplot.set_xlim(-2,2)
+    subplot.set_ylim(-2,2)
   pyplot.show()
-
