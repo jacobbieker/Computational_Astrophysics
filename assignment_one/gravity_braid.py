@@ -7,18 +7,18 @@ def bodies():
     bodies = Particles(3)
     b1 = bodies[0]
     b1.mass = 1.0 | nbody_system.mass #Defined by Xiaoming et al.
-    b1.position = (-1,0.001,0) | nbody_system.length
-    b1.velocity = (0.3592003644,0.1424958332, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al.as (v1,v2)
+    b1.position = (-1,-0.00,0.) | nbody_system.length
+    b1.velocity = (0.2869236336,0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al.as (v1,v2)
 
     b2 = bodies[2]
     b2.mass = 1.0 | nbody_system.mass  #Defined by Xiaoming et al.
-    b2.position = (1,0.001,0)  | nbody_system.length 
-    b2.velocity = (0.3592003644, 0.1424958332, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al. to be (v1,v2)
+    b2.position = (1,0.00,0.)  | nbody_system.length
+    b2.velocity = (0.2869236336, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al. to be (v1,v2)
     
     b3 = bodies[1]
-    b3.mass = 0.75 | nbody_system.mass  #Defined by Xiaoming et al.
-    b3.position = (0, 0, 0) | nbody_system.length
-    b3.velocity = (-0.9578676384,-0.3799888885, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al. ((2*v1)/mass_3, (2*v2)/m3))
+    b3.mass = 0.5 | nbody_system.mass  #Defined by Xiaoming et al.
+    b3.position = (0., 0., 0.) | nbody_system.length
+    b3.velocity = (-2*0.2869236336/0.5,-2*0.0791847624/0.5, 0.0) | (nbody_system.length)/(nbody_system.time)  #Defined by Xiaoming et al. ((2*v1)/mass_3, (2*v2)/m3))
   
     return bodies
 
@@ -68,12 +68,12 @@ def plot_track(x_b3,y_b3,x_b2,y_b2,x_b1,y_b1, output_filename):
     plot.plot(x_b1.value_in(nbody_system.length), y_b1.value_in(nbody_system.length), color = 'g')
     plot.plot(x_b3.value_in(nbody_system.length), y_b3.value_in(nbody_system.length), color = 'b')
     plot.plot(x_b2.value_in(nbody_system.length), y_b2.value_in(nbody_system.length), color = 'r')
-    plot.set_xlim(-2, 2)
-    plot.set_ylim(-2, 2)
+    plot.set_xlim(-1.5, 1.5)
+    plot.set_ylim(-1.5, 1.5)
 
     save_file = 'Three_body_problem.png'
     pyplot.savefig(save_file)
-    print '\nSaved figure in file', save_file,'\n'
+    print('\nSaved figure in file', save_file,'\n')
     pyplot.show()
 
 
@@ -89,6 +89,6 @@ if __name__ in ('__main__','__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
     bodies = bodies()
-    x_b3,y_b3, x_b2,y_b2, x_b1,y_b1 = integrate_bodies(bodies, 1000 | nbody_system.time)
+    x_b3,y_b3, x_b2,y_b2, x_b1,y_b1 = integrate_bodies(bodies, 50.1761292190 | nbody_system.time)
     plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
     
