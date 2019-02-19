@@ -22,7 +22,7 @@ def sun_venus_and_earth():
     b3.position = (1.0, 0.0, 0.0) | nbody_system.length
     b3.velocity = (0.2869236336, 0.0791847624, -0.0) | (nbody_system.length)/(nbody_system.time)
 
-    bodies.move_to_center()
+    #bodies.move_to_center()
     return bodies
 ###BOOKLISTSTOP1###
 ###BOOKLISTSTART2###
@@ -32,9 +32,12 @@ def integrate_solar_system(particles, end_time):
    
     gravity = Huayno()
     gravity.particles.add_particles(bodies)
+    b1 = gravity.particles[0]
     b2 = gravity.particles[1]
     b3 = gravity.particles[2]
-    
+
+    x_b1 = [] | nbody_system.length
+    y_b1 = [] | nbody_system.length
     x_b3 = [] | nbody_system.length
     y_b3 = [] | nbody_system.length
     x_b2 = [] | nbody_system.length
@@ -42,15 +45,17 @@ def integrate_solar_system(particles, end_time):
 
     while gravity.model_time < end_time:
         gravity.evolve_model(gravity.model_time + (1 | nbody_system.time))
+        x_b1.append(b1.x)
+        y_b1.append(b1.y)
         x_b3.append(b3.x)
         y_b3.append(b3.y)
         x_b2.append(b2.x)
         y_b2.append(b2.y)
     gravity.stop()
-    return x_b3, y_b3, x_b2, y_b2
+    return x_b3, y_b3, x_b2, y_b2, x_b1, y_b1
 ###BOOKLISTSTOP2###
 ###BOOKLISTSTART3###
-def plot_track(x_b3,y_b3,x_b2,y_b2, output_filename):
+def plot_track(x_b3,y_b3,x_b2,y_b2,x_b1,y_b1, output_filename):
 
     from matplotlib import pyplot
     figure = pyplot.figure(figsize=(10, 10))
@@ -64,8 +69,8 @@ def plot_track(x_b3,y_b3,x_b2,y_b2, output_filename):
     y_label = 'y [length]'
     pyplot.xlabel(x_label)
     pyplot.ylabel(y_label)
-    print(x_b3)
-    plot.scatter([0.0], [0.0], color='y', lw=8)
+    #print(x_b3)
+    plot.plot(x_b1.value_in(nbody_system.length), y_b1.value_in(nbody_system.length), color = 'g')
     plot.plot(x_b3.value_in(nbody_system.length), y_b3.value_in(nbody_system.length), color = 'b')
     plot.plot(x_b2.value_in(nbody_system.length), y_b2.value_in(nbody_system.length), color = 'r')
     plot.set_xlim(-1.3, 1.3)
@@ -89,6 +94,6 @@ if __name__ in ('__main__','__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
     bodies = sun_venus_and_earth()
-    x_b3,y_b3, x_b2,y_b2 = integrate_solar_system(bodies, 2 | nbody_system.time)
-    plot_track(x_b3, y_b3, x_b2, y_b2, o.output_filename)
+    x_b3,y_b3, x_b2,y_b2, x_b1,y_b1 = integrate_solar_system(bodies, 100 | nbody_system.time)
+    plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
     
