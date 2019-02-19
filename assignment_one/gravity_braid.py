@@ -1,5 +1,7 @@
 from amuse.lab import Particles, units
 from amuse.lab import nbody_system
+import subprocess
+import os
 
 def bodies():
   
@@ -66,16 +68,47 @@ def plot_track(x_b3,y_b3,x_b2,y_b2,x_b1,y_b1, output_filename):
     pyplot.ylabel(y_label)
   
     plot.plot(x_b1.value_in(nbody_system.length), y_b1.value_in(nbody_system.length), color = 'g')
+    plot.scatter(x_b1.value_in(nbody_system.length)[-1], y_b1.value_in(nbody_system.length)[-1], color = 'g', s=15)
     plot.plot(x_b3.value_in(nbody_system.length), y_b3.value_in(nbody_system.length), color = 'b')
+    plot.scatter(x_b3.value_in(nbody_system.length)[-1], y_b3.value_in(nbody_system.length)[-1], color = 'b', s=15)
     plot.plot(x_b2.value_in(nbody_system.length), y_b2.value_in(nbody_system.length), color = 'r')
+    plot.scatter(x_b2.value_in(nbody_system.length)[-1], y_b2.value_in(nbody_system.length)[-1], color = 'r', s=15)
     plot.set_xlim(-1.5, 1.5)
-    plot.set_ylim(-1.5, 1.5)
+    plot.set_ylim(-1., 1.)
 
     save_file = 'Three_body_problem.png'
     pyplot.savefig(save_file)
     print('\nSaved figure in file', save_file,'\n')
-    pyplot.show()
+    #pyplot.show()
+    pyplot.cla()
 
+    steps_per_time = int(len(x_b1) / 121)
+
+    files = []
+
+    fig, ax = pyplot.subplots(figsize=(5,5))
+    for i in range(120):  # 50 frames
+        pyplot.cla()
+        pyplot.plot(x_b1.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], y_b1.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], color = 'g')
+        pyplot.scatter(x_b1.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], y_b1.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], color = 'g', s=15)
+        pyplot.plot(x_b3.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], y_b3.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], color = 'b')
+        pyplot.scatter(x_b3.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], y_b3.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], color = 'b', s=15)
+        pyplot.plot(x_b2.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], y_b2.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time], color = 'r')
+        pyplot.scatter(x_b2.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], y_b2.value_in(nbody_system.length)[i*steps_per_time:(i+1)*steps_per_time][-1], color = 'r', s=15)
+        ax.set_xlim(-1.5, 1.5)
+        ax.set_ylim(-1., 1.)
+        fname = '_tmp%03d.png' % i
+        print('Saving frame', fname)
+        pyplot.savefig(fname)
+        files.append(fname)
+
+    print('Making movie animation.mpg - this may take a while')
+    subprocess.call("mencoder 'mf://_tmp*.png' -mf type=png:fps=10 -ovc lavc "
+                    "-lavcopts vcodec=wmv2 -oac copy -o animation.mpg", shell=True)
+
+    # cleanup
+    for fname in files:
+        os.remove(fname)
 
 def new_option_parser():
     from amuse.units.optparse import OptionParser
@@ -89,6 +122,6 @@ if __name__ in ('__main__','__plot__'):
     o, arguments  = new_option_parser().parse_args()
 
     bodies = bodies()
-    x_b3,y_b3, x_b2,y_b2, x_b1,y_b1 = integrate_bodies(bodies, 50.1761292190 | nbody_system.time)
+    x_b3,y_b3, x_b2,y_b2, x_b1,y_b1 = integrate_bodies(bodies, 20.1761292190 | nbody_system.time)
     plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
     
