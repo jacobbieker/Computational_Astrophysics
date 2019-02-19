@@ -27,7 +27,7 @@ def bodies():
     return bodies
 
 
-def integrate_bodies(particles, end_time):
+def integrate_bodies(bodies, end_time):
     from amuse.lab import Huayno, nbody_system
 
     gravity = Huayno()
@@ -83,15 +83,15 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
     save_file = 'Three_body_problem.png'
     pyplot.savefig(save_file)
     print('\nSaved figure in file', save_file, '\n')
-    # pyplot.show()
+    pyplot.show()
     pyplot.cla()
 
     steps_per_time = int(len(x_b1) / 121)
 
     files = []
 
-    fig, ax = pyplot.subplots(figsize=(5, 5))
-    for i in range(120):  # 50 frames
+    fig, ax = pyplot.subplots(figsize=(10, 10))
+    for i in range(120):  # 120 frames
         pyplot.cla()
         pyplot.plot(x_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time],
                     y_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time], color='g')
