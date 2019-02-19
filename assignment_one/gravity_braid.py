@@ -5,6 +5,10 @@ import os
 
 
 def bodies():
+    """
+    Generates the bodies for one of the gravity braids
+    :return: The 3 Particles for use in the Nbody simulation
+    """
     bodies = Particles(3)
     b1 = bodies[0]
     b1.mass = 1.0 | nbody_system.mass  # Defined by Xiaoming et al.
@@ -28,6 +32,12 @@ def bodies():
 
 
 def integrate_bodies(bodies, end_time):
+    """
+    Integrates the nbody program from 0 to the end_time and saves the positions
+    :param bodies: The list of 3 Particles to use
+    :param end_time: End time in nbody_system.time units
+    :return: The x and y positions of each of the three bodies.
+    """
     from amuse.lab import Huayno, nbody_system
 
     gravity = Huayno()
@@ -55,9 +65,18 @@ def integrate_bodies(bodies, end_time):
     return x_b3, y_b3, x_b2, y_b2, x_b1, y_b1
 
 
-###BOOKLISTSTOP2###
-###BOOKLISTSTART3###
 def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
+    """
+    Plots the motion of the bodies in both a single image and an animation
+    :param x_b3: X positions of body 3
+    :param y_b3: Y positions of body 3
+    :param x_b2: X positions of body 2
+    :param y_b2: Y positions of body 2
+    :param x_b1: X positions of body 1
+    :param y_b1: Y positions of body 1
+    :param output_filename: Output name of the image and of the MP4 animation
+    :return: Nothing
+    """
     from matplotlib import pyplot
     figure = pyplot.figure(figsize=(10, 10))
     pyplot.rcParams.update({'font.size': 30})
@@ -80,9 +99,8 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
     plot.set_xlim(-1.5, 1.5)
     plot.set_ylim(-1., 1.)
 
-    save_file = 'Three_body_problem.png'
-    pyplot.savefig(save_file)
-    print('\nSaved figure in file', save_file, '\n')
+    pyplot.savefig(output_filename + ".png")
+    print('\nSaved figure in file', output_filename, '\n')
     pyplot.show()
     pyplot.cla()
 
@@ -116,14 +134,14 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
                     y_b2.value_in(nbody_system.length)[:(i + 1) * steps_per_time], color='r', alpha=0.2)
         ax.set_xlim(-1.5, 1.5)
         ax.set_ylim(-1., 1.)
+        ax.set_xlabel("x [length]")
+        ax.set_ylabel("y [length]")
         fname = '_tmp%03d.png' % i
-        print('Saving frame', fname)
         pyplot.savefig(fname)
         files.append(fname)
 
-    print('Making movie animation.mpg - this may take a while')
     subprocess.call("mencoder 'mf://_tmp*.png' -mf type=png:fps=10 -ovc lavc "
-                    "-lavcopts vcodec=wmv2 -oac copy -o animation.mpg", shell=True)
+                    "-lavcopts vcodec=wmv2 -oac copy -o {}.mpg".format(output_filename + "_animation"), shell=True)
 
     # cleanup
     for fname in files:
@@ -131,6 +149,10 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
 
 
 def new_option_parser():
+    """
+    Parses the name of the output file
+    :return: The output file name if given, else the default
+    """
     from amuse.units.optparse import OptionParser
     result = OptionParser()
     result.add_option("-o",
@@ -143,5 +165,5 @@ if __name__ in ('__main__', '__plot__'):
     o, arguments = new_option_parser().parse_args()
 
     bodies = bodies()
-    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 4.538*5 | nbody_system.time)
+    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 4.538*10 | nbody_system.time)
     plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
