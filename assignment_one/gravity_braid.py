@@ -98,16 +98,22 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
         pyplot.scatter(x_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1],
                        y_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1], color='g',
                        s=15)
+        pyplot.plot(x_b1.value_in(nbody_system.length)[:(i + 1) * steps_per_time],
+                    y_b1.value_in(nbody_system.length)[:(i + 1) * steps_per_time], color='g', alpha=0.2)
         pyplot.plot(x_b3.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time],
                     y_b3.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time], color='b')
         pyplot.scatter(x_b3.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1],
                        y_b3.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1], color='b',
                        s=15)
+        pyplot.plot(x_b3.value_in(nbody_system.length)[:(i + 1) * steps_per_time],
+                    y_b3.value_in(nbody_system.length)[:(i + 1) * steps_per_time], color='b', alpha=0.2)
         pyplot.plot(x_b2.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time],
                     y_b2.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time], color='r')
         pyplot.scatter(x_b2.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1],
                        y_b2.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time][-1], color='r',
                        s=15)
+        pyplot.plot(x_b2.value_in(nbody_system.length)[:(i + 1) * steps_per_time],
+                    y_b2.value_in(nbody_system.length)[:(i + 1) * steps_per_time], color='r', alpha=0.2)
         ax.set_xlim(-1.5, 1.5)
         ax.set_ylim(-1., 1.)
         fname = '_tmp%03d.png' % i
