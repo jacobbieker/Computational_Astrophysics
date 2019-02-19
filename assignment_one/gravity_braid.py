@@ -7,20 +7,20 @@ def sun_venus_and_earth():
     b1 = bodies[0]
     b1.mass = 1.0 | nbody_system.mass
     #sun.radius = 1.0 |
-    b1.position = (-1.0, 0.0, 0.0) | nbody_system.length
+    b1.position = (-1,0.001,0) | nbody_system.length
     b1.velocity = (0.2869236336, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)
 
     b2 = bodies[1]
     b2.mass = 0.5 | nbody_system.mass
     #venus.radius = 3026.0 |
-    b2.position = (0.0, 0.0, 0.0) | nbody_system.length
+    b2.position = (0, 0, 0) | nbody_system.length
     b2.velocity = (-1.1476945344, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)
 
     b3 = bodies[2]
     b3.mass = 1.0 | nbody_system.mass
     #earth.radius = 1.0 | units.REarth
-    b3.position = (1.0, 0.0, 0.0) | nbody_system.length
-    b3.velocity = (0.2869236336, 0.0791847624, -0.0) | (nbody_system.length)/(nbody_system.time)
+    b3.position = (1,0.001,0)  | nbody_system.length
+    b3.velocity = (0.2869236336, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)
 
     #bodies.move_to_center()
     return bodies
@@ -73,8 +73,8 @@ def plot_track(x_b3,y_b3,x_b2,y_b2,x_b1,y_b1, output_filename):
     plot.plot(x_b1.value_in(nbody_system.length), y_b1.value_in(nbody_system.length), color = 'g')
     plot.plot(x_b3.value_in(nbody_system.length), y_b3.value_in(nbody_system.length), color = 'b')
     plot.plot(x_b2.value_in(nbody_system.length), y_b2.value_in(nbody_system.length), color = 'r')
-    plot.set_xlim(-1.3, 1.3)
-    plot.set_ylim(-1.3, 1.3)
+    plot.set_xlim(-2, 2)
+    plot.set_ylim(-2, 2)
 
     save_file = 'sun_venus_earth.png'
     pyplot.savefig(save_file)
