@@ -137,5 +137,5 @@ if __name__ in ('__main__', '__plot__'):
     o, arguments = new_option_parser().parse_args()
 
     bodies = bodies()
-    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 20.1761292190 | nbody_system.time)
+    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 4.538*5 | nbody_system.time)
     plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
