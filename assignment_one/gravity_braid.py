@@ -7,20 +7,20 @@ def sun_venus_and_earth():
     b1 = bodies[0]
     b1.mass = 1.0 | nbody_system.mass
     #sun.radius = 1.0 |
-    b1.position = (855251, -804836, -3186) | nbody_system.length
-    b1.velocity = (7.893, 11.894, 0.20642) | (nbody_system.length)/(nbody_system.time)
+    b1.position = (-1.0, 0.0, 0.0) | nbody_system.length
+    b1.velocity = (0.2869236336, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)
 
     b2 = bodies[1]
     b2.mass = 0.5 | nbody_system.mass
     #venus.radius = 3026.0 |
-    b2.position = (-0.3767, 0.60159, 0.03930) | nbody_system.length
-    b2.velocity = (-29.7725, -18.849, 0.795) | (nbody_system.length)/(nbody_system.time)
+    b2.position = (0.0, 0.0, 0.0) | nbody_system.length
+    b2.velocity = (-1.1476945344, 0.0791847624, 0.0) | (nbody_system.length)/(nbody_system.time)
 
     b3 = bodies[2]
     b3.mass = 1.0 | nbody_system.mass
     #earth.radius = 1.0 | units.REarth
-    b3.position = (-0.98561, 0.0762, -7.847e-5) | nbody_system.length
-    b3.velocity = (-2.927, -29.803, -0.0005327) | (nbody_system.length)/(nbody_system.time)
+    b3.position = (1.0, 0.0, 0.0) | nbody_system.length
+    b3.velocity = (0.2869236336, 0.0791847624, -0.0) | (nbody_system.length)/(nbody_system.time)
 
     bodies.move_to_center()
     return bodies
@@ -35,10 +35,10 @@ def integrate_solar_system(particles, end_time):
     b2 = gravity.particles[1]
     b3 = gravity.particles[2]
     
-    x_b3 = [] 
-    y_b3 = []
-    x_b2 = []
-    y_b2 = []
+    x_b3 = [] | nbody_system.length
+    y_b3 = [] | nbody_system.length
+    x_b2 = [] | nbody_system.length
+    y_b2 = [] | nbody_system.length
 
     while gravity.model_time < end_time:
         gravity.evolve_model(gravity.model_time + (1 | nbody_system.time))
@@ -64,7 +64,7 @@ def plot_track(x_b3,y_b3,x_b2,y_b2, output_filename):
     y_label = 'y [length]'
     pyplot.xlabel(x_label)
     pyplot.ylabel(y_label)
-
+    print(x_b3)
     plot.scatter([0.0], [0.0], color='y', lw=8)
     plot.plot(x_b3.value_in(nbody_system.length), y_b3.value_in(nbody_system.length), color = 'b')
     plot.plot(x_b2.value_in(nbody_system.length), y_b2.value_in(nbody_system.length), color = 'r')
