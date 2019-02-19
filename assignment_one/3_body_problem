@@ -4,7 +4,11 @@ the motion of three bodies is repeating only under special circumstances. As bod
 The motion of three particles of unequal mass and zero angular momentum can be pictured as "braids" of strands.
 
 Our solution uses sun_venus_earth,py as a basis and adapts it for the 3-body problem with unequal masses, zero angular momentum, 
-and arbitrary units. The code uses the gravity simulator Huyano to evolve the system from the given initial conditions. 
+and arbitrary units. The code uses the gravity simulator Huyano to evolve the system from the given initial conditions. In addition,
+the code produces a final graph of the entire paths of the three bodies, as well as a small animation of the entire process. The
+default timestep was 0.01 nbody time units, although there are examples of different timesteps used in the assignment folder. The
+timestep size did affect how stable the system seemed to be, with smaller timesteps generally resulting in more stable configurations,
+but taking significantly longer to run.
 
 The braid is stable if the orbit is periodic. A periodic orbit means that the body starts and finishes its orbit in the same place. A 
 periodic orbit is achieved when the initial conditions of the orbit, position and velocity give a proximity function less than 10^6. 
@@ -17,9 +21,7 @@ or other factors influencing their orbits.  In addition it is highly unlikely th
 and m_3 being exactly half of m_1 for instance) would be satisfied in the Universe. Despite the complexity of these systems, these 3-body 
 simulations are the basis for which the n-body systems that appear in the universe are built from. One of these orbits could exist in a 
 binary star system if another star was pulled into their orbit as well. You would maybe look closer to the center of galaxies for these 
-types of systems as the star populations are much more dense and the probability of coming across one of these systems more likely. On the 
-other hand the 3-body problem can also be applied to the atomic level. The Helium atom is another example of the 3-body problem with two 
-electrons orbiting a nucleus. This time instead of gravity it is electromagnetism that holds the atom together. 
+types of systems as the star populations are much more dense and the probability of coming across one of these systems more likely.
 
 If we were to write this simulator without Amuse we would need to ensure that the code follows this pattern. For three bodies: 
 1) Set your initial value for the gravitational constant G. 
