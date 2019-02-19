@@ -2,6 +2,7 @@ from amuse.lab import Particles, units
 from amuse.lab import nbody_system
 import subprocess
 import os
+import numpy as np
 
 
 def bodies():
@@ -53,7 +54,7 @@ def integrate_bodies(bodies, end_time):
     x_b2 = [] | nbody_system.length
     y_b2 = [] | nbody_system.length
 
-    while gravity.model_time < end_time:
+    while gravity.model_time < end_time: # Integrates the system until the given end time
         gravity.evolve_model(gravity.model_time + (0.01 | nbody_system.time))
         x_b1.append(b1.x)
         y_b1.append(b1.y)
@@ -67,7 +68,7 @@ def integrate_bodies(bodies, end_time):
 
 def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
     """
-    Plots the motion of the bodies in both a single image and an animation
+    Plots the motion of the bodies in both a single image and an animation.
     :param x_b3: X positions of body 3
     :param y_b3: Y positions of body 3
     :param x_b2: X positions of body 2
@@ -75,7 +76,6 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
     :param x_b1: X positions of body 1
     :param y_b1: Y positions of body 1
     :param output_filename: Output name of the image and of the MP4 animation
-    :return: Nothing
     """
     from matplotlib import pyplot
     figure = pyplot.figure(figsize=(10, 10))
@@ -104,12 +104,23 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
     pyplot.show()
     pyplot.cla()
 
-    steps_per_time = int(len(x_b1) / 121)
+    """
+    The code below is from the matplotlib demo : https://matplotlib.org/2.1.1/gallery/animation/movie_demo_sgskip.html
+    """
+
+    frames = 120 # number of final frames
+
+    steps_per_time = int(len(x_b1) / frames+1)
+
+    # Get the number of timesteps per frame
+
+    time_per_step = (len(x_b1) * 0.01) / frames
 
     files = []
 
     fig, ax = pyplot.subplots(figsize=(10, 10))
-    for i in range(120):  # 120 frames
+
+    for i in range(frames):
         pyplot.cla()
         pyplot.plot(x_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time],
                     y_b1.value_in(nbody_system.length)[i * steps_per_time:(i + 1) * steps_per_time], color='g')
@@ -136,7 +147,8 @@ def plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, output_filename):
         ax.set_ylim(-1., 1.)
         ax.set_xlabel("x [length]")
         ax.set_ylabel("y [length]")
-        fname = '_tmp%03d.png' % i
+        ax.set_title("Timestep: {}".format(np.round(i*time_per_step, 3)))
+        fname = '_tmp%04d.png' % i
         pyplot.savefig(fname)
         files.append(fname)
 
@@ -165,5 +177,6 @@ if __name__ in ('__main__', '__plot__'):
     o, arguments = new_option_parser().parse_args()
 
     bodies = bodies()
-    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 4.538*10 | nbody_system.time)
+    # Use the T* from the paper 4.538 for the base time period
+    x_b3, y_b3, x_b2, y_b2, x_b1, y_b1 = integrate_bodies(bodies, 4.538*5 | nbody_system.time)
     plot_track(x_b3, y_b3, x_b2, y_b2, x_b1, y_b1, o.output_filename)
