@@ -1,20 +1,22 @@
 The 3-body problem seeks to answer the question how three objects orbit each other in a repeating pattern. The gravitation theory 
-predicts the orbit of two bodies but doesnâ€™t provide solutions to how three bodies would orbit each other. It has been shown that 
-the motion of three bodies is repeating only under special circumstances. As bodies move, they draw out "strands" in 3D space-time. 
+predicts the orbit of two bodies (particles) but doesn’t provide solutions to how three bodies would orbit each other. It has been shown that 
+the motion of three bodies is periodic only under special circumstances. As bodies move, they draw out "strands" in 3D space-time. 
 The motion of three particles of unequal mass and zero angular momentum can be pictured as "braids" of strands.
 
-Our solution uses sun_venus_earth,py as a basis and adapts it for the 3-body problem with unequal masses, zero angular momentum, 
-and arbitrary units. The code uses the gravity simulator Huyano to evolve the system from the given initial conditions. In addition,
-the code produces a final graph of the entire paths of the three bodies, as well as a small animation of the entire process. The
-default timestep was 0.01 nbody time units, although there are examples of different timesteps used in the assignment folder. The
-timestep size did affect how stable the system seemed to be, with smaller timesteps generally resulting in more stable configurations,
-but taking significantly longer to run. An example of this is in the ThreeBodyProblem_long_small files, where it can be seen, with a
-timestep 10 times smaller than the other animations, the system stays stable for longer, although still becoming unstable in the end.
-This seems to suggest that the issues of our results seeming to not be stable are mostly related to the timestep length and numerical
-accuracy of the code.
+Our solution uses 'sun_venus_earth.py' as a basis and adapts it for the 3-body problem with unequal pointlike masses, zero angular momentum, 
+and units from the nbody_system module. The code uses the gravity integrator Huayno from the AMUSE module to evolve the system from 
+the given initial conditions. In addition, the code produces a final graph of the full paths of the three bodies, as well as a small
+animation of the process. The default timestep was 0.01 nbody time units, although there are examples of different timesteps used in 
+the assignment folder. The timestep size did affect how stable the system seemed to be, with smaller timesteps generally resulting in 
+more stable configurations,but taking significantly longer to run. An example of this is in the ThreeBodyProblem_long_small files, 
+where it can be seen, with a timestep 10 times smaller than the other animations, the system stays stable for longer, although still 
+becoming unstable in the end. This seems to suggest that the issues of our results seeming to not be stable are mostly related to 
+the timestep length and numerical accuracy of the code. AMUSE was used to execute the code.
 
-The braid is stable if the orbit is periodic. A periodic orbit means that the body starts and finishes its orbit in the same place. A 
-periodic orbit is achieved when the initial conditions of the orbit, position and velocity give a proximity function less than 10^6. 
+The braid is stable if the orbit is periodic. A periodic orbit means that the body starts and finishes its orbit in the same place and 
+at the same velocity. The numeric model provides no such closed solution. In the model a periodic orbit is achieved when the initial 
+conditions of the orbit, position and velocity give a value for the return proximity function (Equation 3 in Xiaoming et al.) of less than 10^6. 
+
 With our code we tested this by running the simulation for time -> infinity . As video ThreeBodyProblem_unstable_animation.mpg show the 
 orbit is not stable as time -> infinity we believe this is due, in part, to the build up of numerical error.
 
@@ -22,11 +24,15 @@ We would argue that braids like the one we recreated and the other in Xiaoming e
 are created in a perfect environment where these objects formed and became gravitationally bound without any resulting planets, moons,
 or other factors influencing their orbits.  In addition it is highly unlikely that the initial conditions for mass of the bodies (m_1 = m_2 
 and m_3 being exactly half of m_1 for instance) would be satisfied in the Universe. Despite the complexity of these systems, these 3-body 
-simulations are the basis for which the n-body systems that appear in the universe are built from. One of these orbits could exist in a 
+simulations are the basis for which the n-body systems that appear in the Universe are built from. One of these orbits could exist in a 
 binary star system if another star was pulled into their orbit as well. You would maybe look closer to the center of galaxies for these 
-types of systems as the star populations are much more dense and the probability of coming across one of these systems more likely.
+types of systems as the star populations are much more dense and the probability of coming across one of these systems more likely. 
+A quantum mechanical analogue of the three-body problem would be the helium-2 atom where two negatively charged electrons orbit a 
+positively charged nucleus. In a classical view of the helium-2 atom, the charges (rather than masses) of the particles can be inserted 
+into Coulomb's law (which is the electromanetic equivalent of Newtons law of gravitation) to calculate the interaction numerically. 
+As for any 3-body problem there is no analytical solution to the helium-2 atom.
 
-If we were to write this simulator without Amuse we would need to ensure that the code follows this pattern. For three bodies: 
+If we were to write this simulator without AMUSE we would need to ensure that the code follows this pattern. For three bodies: 
 1) Set your initial value for the gravitational constant G. 
 2)  Use initial conditions (mass and distance) to calculate the net force working on all individual particles with Newtons equation 
 of gravitational interaction. 
