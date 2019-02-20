@@ -8,7 +8,10 @@ and arbitrary units. The code uses the gravity simulator Huyano to evolve the sy
 the code produces a final graph of the entire paths of the three bodies, as well as a small animation of the entire process. The
 default timestep was 0.01 nbody time units, although there are examples of different timesteps used in the assignment folder. The
 timestep size did affect how stable the system seemed to be, with smaller timesteps generally resulting in more stable configurations,
-but taking significantly longer to run.
+but taking significantly longer to run. An example of this is in the ThreeBodyProblem_long_small files, where it can be seen, with a
+timestep 10 times smaller than the other animations, the system stays stable for longer, although still becoming unstable in the end.
+This seems to suggest that the issues of our results seeming to not be stable are mostly related to the timestep length and numerical
+accuracy of the code.
 
 The braid is stable if the orbit is periodic. A periodic orbit means that the body starts and finishes its orbit in the same place. A 
 periodic orbit is achieved when the initial conditions of the orbit, position and velocity give a proximity function less than 10^6. 
