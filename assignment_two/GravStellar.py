@@ -20,7 +20,8 @@ from amuse.community.sse.interface import SSE
 
 class Gravitational_Stellar(object):
 
-    def __init__(self, integration_scheme, stellar_mass_loss_timestep_fraction, gravity_model=SeBa, stellar_model=Hermite):
+    def __init__(self, integration_scheme="interlaced", stellar_mass_loss_timestep_fraction=0.1, gravity_model=SeBa,
+                 stellar_model=Hermite, verbose=True):
         self.integration_scheme = integration_scheme
         self.stellar_mass_loss_timestep_fraction = stellar_mass_loss_timestep_fraction
         self.particles = None
@@ -29,6 +30,8 @@ class Gravitational_Stellar(object):
 
         self.stellar_time = 0.0
 
+        self.verbose = verbose
+
         self.gravity = None
         self.stellar = self.stellar_model()
 
@@ -36,6 +39,16 @@ class Gravitational_Stellar(object):
         self.channel_from_framework_to_gravity = None
         self.channel_from_gravity_to_framework = None
 
+        self.eccentricity_out_history = []
+        self.eccentricity_in_history = []
+        self.semimajor_axis_in_history = []
+        self.semimajor_axis_out_history = []
+        self.timestep_history = []
+
+        self.semimajor_axis_init = None
+        self.semimajor_axis_out_init = None
+        self.eccentricity_out_init = None
+        self.eccentricity_init = None
 
     def add_particles(self, particles):
         self.particles = particles
@@ -49,24 +62,45 @@ class Gravitational_Stellar(object):
 
         return star_timesteps
 
-
-    def evolve_model(self, end_time):
+    def evolve_model(self, end_time, number_steps=10000):
 
         time = 0.0 | end_time.unit
 
+        delta_time_diagnostic = end_time / float(number_steps)
+
         stellar_time_point = self.stellar_time + time
+
+        total_initial_energy = self.gravity.kinetic_energy + self.gravity.potential_energy
+        total_previous_energy = total_initial_energy
+
+        total_particle_mass = self.particles.mass.sum()
+
+        semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
+        self.timestep_history.append(time.value_in(units.Myr))
+        self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
+        self.eccentricity_in_history.append(eccentricity_in / self.eccentricity_init)
+        self.semimajor_axis_out_history.append(semimajor_axis_out / self.semimajor_axis_out_init)
+        self.eccentricity_out_history.append(eccentricity_out / self.eccentricity_out_init)
 
         while time < end_time:
 
-            if self.integration_scheme == "interlaced":
+            star_timesteps = self.determine_timestep()
 
-                star_timesteps = self.determine_timestep()
+            smallest_timestep = min(star_timesteps)
 
-                smallest_timestep = min(star_timesteps)
+            smallest_timestep *= self.stellar_mass_loss_timestep_fraction
 
-                smallest_timestep *= self.stellar_mass_loss_timestep_fraction
+            if self.integration_scheme == "gravity_first":
+                time = self.advance_gravity(time, smallest_timestep)
+                stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, smallest_timestep)
 
-                half_timestep = float(smallest_timestep/2.)
+            elif self.integration_scheme == "stellar_first":
+                stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, smallest_timestep)
+                time = self.advance_gravity(time, smallest_timestep)
+
+            else:
+
+                half_timestep = float(smallest_timestep / 2.)
 
                 stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, half_timestep)
 
@@ -76,12 +110,51 @@ class Gravitational_Stellar(object):
 
                 delta_energy_stellar += delta_energy
 
-                return NotImplementedError
-            elif self.integration_scheme == "gravity_first":
-                return NotImplementedError
-            elif self.integration_scheme == "stellar_first":
-                return NotImplementedError
-            return NotImplementedError
+            if time >= delta_time_diagnostic:
+                # Sees if diagnositcs should be printed out
+
+                delta_time_diagnostic = time + delta_time_diagnostic
+
+                kinetic_energy = self.gravity.kinetic_energy
+                potential_energy = self.gravity.potential_energy
+                total_energy = kinetic_energy + potential_energy
+                delta_total_energy = total_previous_energy - total_energy
+
+                total_mass = self.particles.mass.sum()
+                if self.verbose:
+                    print("T=", time, end=' ')
+                    print("M=", total_mass, "(dM[SE]=", total_mass / total_particle_mass, ")", end=' ')
+                    print("E= ", total_energy, "Q= ", kinetic_energy / potential_energy, end=' ')
+                    print("dE=", (total_initial_energy - total_energy) / total_energy, "ddE=",
+                          (total_previous_energy - total_energy) / total_energy, end=' ')
+                    print("(dE[SE]=", delta_energy_stellar / total_energy, ")")
+
+                total_initial_energy -= delta_total_energy
+                total_previous_energy = total_energy
+
+                # Break if binary is broken up
+                semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
+
+                if self.verbose:
+                    print("Triple elements t=", (4 | units.Myr) + time,
+                          "inner:", self.particles[0].mass, self.particles[1].mass, semimajor_axis_in, eccentricity_in,
+                          "outer:", self.particles[2].mass, semimajor_axis_out, eccentricity_out)
+
+                self.timestep_history.append(time.value_in(units.Myr))
+                self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
+                self.eccentricity_in_history.append(eccentricity_in / self.eccentricity_init)
+                self.semimajor_axis_out_history.append(semimajor_axis_out / self.semimajor_axis_out_init)
+                self.eccentricity_out_history.append(eccentricity_out / self.eccentricity_out_init)
+
+                if eccentricity_out > 1.0 or semimajor_axis_out <= zero:
+                    print("Binary ionized or merged")
+                    break
+
+            self.gravity.stop()
+            self.stellar.stop()
+
+            return self.timestep_history, self.semimajor_axis_in_history, self.eccentricity_in_history, \
+                   self.semimajor_axis_out_history, self.eccentricity_out_history
 
     def advance_stellar(self, timestep, delta_time):
         Initial_Energy = self.gravity.kinetic_energy + self.gravity.potential_energy
@@ -105,9 +178,6 @@ class Gravitational_Stellar(object):
         self.channel_from_framework_to_gravity = self.particles.new_channel_to(self.gravity.particles)
         self.channel_from_gravity_to_framework = self.gravity.particles.new_channel_to(self.particles)
 
-        total_initial_energy = self.gravity.kinetic_energy + self.gravity.potential_energy
-        self.total_previous_energy = total_initial_energy
-
         self.gravity.particles.move_to_center()
 
     def age_stars(self, stellar_start_time):
@@ -125,6 +195,26 @@ class Gravitational_Stellar(object):
 
         self.stellar_time = stellar_start_time
 
+    def get_orbital_elements_of_triple(self):
+        inner_binary = self.particles[0] + self.particles[1]
+        outer_binary = Particles(1)
+        outer_binary[0].mass = inner_binary.mass.sum()
+        outer_binary[0].position = inner_binary.center_of_mass()
+        outer_binary[0].velocity = inner_binary.center_of_mass_velocity()
+        outer_binary.add_particle(self.particles[2])
+        _, _, semimajor_axis_in, eccentricity_in, _, _, _, _ \
+            = orbital_elements_from_binary(inner_binary, G=constants.G)
+        _, _, semimajor_axis_out, eccentricity_out, _, _, _, _ \
+            = orbital_elements_from_binary(outer_binary, G=constants.G)
+        return semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out
+
+    def set_initial_parameters(self, semimajor_axis_init, eccentricity_init, semimajor_axis_out_init,
+                               eccentricity_out_init):
+        self.semimajor_axis_init = semimajor_axis_init
+        self.semimajor_axis_out_init = semimajor_axis_out_init
+        self.eccentricity_out_init = eccentricity_out_init
+        self.eccentricity_init = eccentricity_init
+
 
 class GravStellar(object):
     """
@@ -133,7 +223,8 @@ class GravStellar(object):
     Should be given bodies used, and the run the
     """
 
-    def __init__(self, timestep, end_time, number_timesteps, integration_scheme, stellar_mass_loss_frac, stars, stellar_start_time,
+    def __init__(self, timestep, end_time, number_timesteps, integration_scheme, stellar_mass_loss_frac, stars,
+                 stellar_start_time,
                  gravity_model=SeBa, stellar_model=Hermite, verbose=False):
 
         self.timestep = timestep
@@ -161,9 +252,7 @@ class GravStellar(object):
         self.semimajor_axis_out_history = []
         self.timestep_history = []
 
-
         self.time = 0.0 | end_time.unit
-
 
     def advance_stellar(self, ts, dt):
         E0 = self.gravity.kinetic_energy + self.gravity.potential_energy
@@ -178,17 +267,18 @@ class GravStellar(object):
         self.gravity.evolve_model(tg)
         channel_from_gd_to_framework.copy()
         return tg
+
     def get_orbital_period(self):
-        return 2*np.pi*(a**3/(constants.G*Mtot)).sqrt()
+        return 2 * np.pi * (a ** 3 / (constants.G * Mtot)).sqrt()
 
     def get_semi_major_axis(self):
-        return (constants.G*Mtot*P**2/(4*np.pi**2))**(1./3)
+        return (constants.G * Mtot * P ** 2 / (4 * np.pi ** 2)) ** (1. / 3)
 
     def get_mass_loss(self):
         return NotImplementedError
 
     def get_orbital_elements_of_triple(self):
-        inner_binary = self.stars[0]+self.stars[1]
+        inner_binary = self.stars[0] + self.stars[1]
         outer_binary = Particles(1)
         outer_binary[0].mass = inner_binary.mass.sum()
         outer_binary[0].position = inner_binary.center_of_mass()
@@ -205,7 +295,7 @@ class GravStellar(object):
         dt_diag = self.end_time / float(self.number_timesteps)
 
         self.timestep_history = [self.time.value_in(units.Myr)]
-        self.semimajor_axis_in_history = [semimajor_axis_in/semimajor_axis_in_0]
+        self.semimajor_axis_in_history = [semimajor_axis_in / semimajor_axis_in_0]
 
         while self.time < self.end_time:
 
@@ -224,10 +314,10 @@ class GravStellar(object):
             else:
 
                 dE_se = zero
-                #ts, dE_se = advance_stellar(ts, dt/2)
+                # ts, dE_se = advance_stellar(ts, dt/2)
                 time = self.advance_gravity(time, dt)
-                #ts, dE = advance_stellar(ts, dt/2)
-                #dE_se += dE
+                # ts, dE = advance_stellar(ts, dt/2)
+                # dE_se += dE
 
             if self.time >= self.t_diag:
 
@@ -253,10 +343,10 @@ class GravStellar(object):
                           "outer:", self.stars[2].mass, semimajor_axis_out, eccentricity_out)
 
                 self.timestep_history.append(time.value_in(units.Myr))
-                self.semimajor_axis_in_history.append(semimajor_axis_in/ain_0)
-                self.eccentricity_in_history.append(eccentricity_in/ein_0)
-                self.semimajor_axis_out_history.append(semimajor_axis_out/aout_0)
-                self.eccentricity_out_history.append(eccentricity_out/eout_0)
+                self.semimajor_axis_in_history.append(semimajor_axis_in / ain_0)
+                self.eccentricity_in_history.append(eccentricity_in / ein_0)
+                self.semimajor_axis_out_history.append(semimajor_axis_out / aout_0)
+                self.eccentricity_out_history.append(eccentricity_out / eout_0)
 
                 if eccentricity_out > 1.0 or semimajor_axis_out <= zero:
                     print("Binary ionized or merged")
@@ -281,8 +371,6 @@ class GravStellar(object):
 
         self.gravity.particles.move_to_center()
 
-
-
     def age_stars(self):
         mult_stars = Particles(self.num_bodies)
         for i in range(self.num_bodies):
@@ -297,6 +385,3 @@ class GravStellar(object):
         self.channel_from_stellar.copy_attributes(['mass'])
         for i in range(self.num_bodies):
             self.stars[i].mass = mult_stars[i].mass
-
-
-
