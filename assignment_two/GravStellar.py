@@ -17,6 +17,8 @@ from amuse.community.hermite0.interface import Hermite
 from amuse.community.seba.interface import SeBa
 from amuse.community.sse.interface import SSE
 
+import time as t
+
 
 class GravitationalStellar(object):
 
@@ -50,6 +52,10 @@ class GravitationalStellar(object):
         self.eccentricity_out_init = None
         self.eccentricity_init = None
 
+        self.elapsed_sim_time = 0.0
+        self.elapsed_amuse_time = 0.0
+        self.elapsed_total_time = 0.0
+
     def add_particles(self, particles):
         self.particles = particles
 
@@ -63,6 +69,8 @@ class GravitationalStellar(object):
         return star_timesteps
 
     def evolve_model(self, end_time, number_steps=10000):
+
+        start_time_all = t.time()
 
         time = 0.0 | end_time.unit
 
@@ -153,20 +161,34 @@ class GravitationalStellar(object):
             self.gravity.stop()
             self.stellar.stop()
 
+            end_time_all = t.time()
+
+            total_time_elapsed = end_time_all - start_time_all
+
+            self.elapsed_total_time += total_time_elapsed
+
+            self.elapsed_amuse_time = self.elapsed_total_time - self.elapsed_sim_time
+
             return self.timestep_history, self.semimajor_axis_in_history, self.eccentricity_in_history, \
                    self.semimajor_axis_out_history, self.eccentricity_out_history
 
     def advance_stellar(self, timestep, delta_time):
         Initial_Energy = self.gravity.kinetic_energy + self.gravity.potential_energy
         timestep += delta_time
+        start_sim_time = t.time()
         self.stellar.evolve_model(timestep)
+        elapsed_sim_time = t.time() - start_sim_time
+        self.elapsed_sim_time += elapsed_sim_time
         self.channel_from_stellar.copy_attributes(["mass"])
         self.channel_from_framework_to_gravity.copy_attributes(["mass"])
         return timestep, self.gravity.kinetic_energy + self.gravity.potential_energy - Initial_Energy
 
     def advance_gravity(self, timestep, delta_time):
         timestep += delta_time
+        start_sim_time = t.time()
         self.gravity.evolve_model(timestep)
+        elapsed_sim_time = t.time() - start_sim_time
+        self.elapsed_sim_time += elapsed_sim_time
         self.channel_from_gravity_to_framework.copy()
         return timestep
 
@@ -181,6 +203,7 @@ class GravitationalStellar(object):
         self.gravity.particles.move_to_center()
 
     def age_stars(self, stellar_start_time):
+        start_time_all = t.time()
         mult_stars = Particles(len(self.particles))
         for i in range(len(self.particles)):
             mult_stars[i].mass = self.particles[i].mass
@@ -188,12 +211,22 @@ class GravitationalStellar(object):
         # Start Stellar Evolution
         self.stellar.particles.add_particles(mult_stars)
         self.channel_from_stellar = self.stellar.particles.new_channel_to(mult_stars)
+        start_sim_time = t.time()
         self.stellar.evolve_model(stellar_start_time)
+        end_sim_time = t.time()
         self.channel_from_stellar.copy_attributes(['mass'])
         for i in range(len(self.particles)):
             self.particles[i].mass = mult_stars[i].mass
 
         self.stellar_time = stellar_start_time
+
+        end_time_all = t.time()
+
+        self.elapsed_sim_time += end_sim_time - start_sim_time
+
+        self.elapsed_total_time += start_time_all - end_time_all
+
+        self.elapsed_amuse_time = self.elapsed_total_time - self.elapsed_sim_time
 
         return self.particles
 
