@@ -63,7 +63,7 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
 
     save_file = 'semi_and_eccen' \
-                +'_dtse={:.3f}'.format(stellar_start_time) \
+                +'_dtse={:.3f}'.format(stellar_mass_fraction) \
                 +'.png'
     plt.savefig(save_file)
     print('\nSaved figure in file', save_file,'\n')
@@ -77,6 +77,7 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.plot(computer_time, eccentricity_in, label='Eccentricity_in')
     plt.ylabel("Eccentricity")
     plt.xlabel("Computer Wall time")
+    plt.savefig("eccentricity_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
 
 
     # then Semimajor axis vs time
@@ -86,6 +87,8 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.plot(computer_time, semimajor_axis_out, label='Semimajor Axis in')
     plt.ylabel("Semimajor Axis")
     plt.xlabel("Computer Wall time")
+    plt.savefig("semimajor_axis_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
+
 
 
 def get_orbital_period(orbital_separation, total_mass):
