@@ -19,6 +19,31 @@ from amuse.community.sse.interface import SSE
 
 from amuse.ext.solarsystem import get_position
 
+# TODO: Makea plot of the orbital parameters
+# TODO and the wall-clock computer time as a function of the time stepsize.
+# TODO Based on these curves, can you decide what is the best
+# TODO time step size for simulation a triplesystem like θMuscae
+
+"""
+TODO
+
+1. Make a plot of the orbital parameters and the wall-clock computer time as a function of the time stepsize. 
+Based on these curves, can you decide what is the best time step size for simulation a triplesystem likeθMuscae
+
+2. Use theinterlaced temporal discretization method and study if 
+this is really a preferred way of integrating two numerical solvers
+
+3. Run several simulations, subsequently reducing the time step for each of them and record thesemi-major axis 
+and eccentricity of the inner and the outer binary, and their relative inclination.
+
+4. Find in the literature the masses, mass-loss rates of the three stars of θMuscae and their orbital parameters. 
+ Generate a triple system with the appropriate orbital elements. 
+
+5. Answer the Questions at the bottom
+
+
+"""
+
 def get_orbital_period(orbital_separation, total_mass):
     return 2 * np.pi * (orbital_separation ** 3 / (constants.G * total_mass)).sqrt()
 
