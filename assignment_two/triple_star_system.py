@@ -1,5 +1,6 @@
 from .GravStellar import GravitationalStellar
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from amuse.units import units, constants, nbody_system
@@ -18,6 +19,9 @@ from amuse.community.seba.interface import SeBa
 from amuse.community.sse.interface import SSE
 
 from amuse.ext.solarsystem import get_position
+
+from prepare_figure import single_frame
+from distinct_colours import get_distinct
 
 # TODO: Makea plot of the orbital parameters
 # TODO and the wall-clock computer time as a function of the time stepsize.
@@ -44,6 +48,45 @@ and eccentricity of the inner and the outer binary, and their relative inclinati
 
 
 """
+
+def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axis_in, semimajor_axis_out, stellar_mass_fraction):
+    x_label = "$a/a_{0}$"
+    y_label = "$e/e_{0}$"
+    fig = single_frame(x_label, y_label, logx=False, logy=False,
+                       xsize=10, ysize=8)
+    color = get_distinct(4)
+
+    time, ai, ei, ao, eo =
+    plt.plot(ai, ei, c=color[0], label='inner')
+    plt.plot(ao, eo, c=color[1], label='outer')
+
+    plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
+
+    save_file = 'semi_and_eccen' \
+                +'_dtse={:.3f}'.format(stellar_start_time) \
+                +'.png'
+    plt.savefig(save_file)
+    print('\nSaved figure in file', save_file,'\n')
+
+    # Now plot the orbital params as function of timestep
+
+    # First Eccentricity vs time
+
+    plt.cla()
+    plt.plot(computer_time, eccentricity_out, label='Eccentricity_out')
+    plt.plot(computer_time, eccentricity_in, label='Eccentricity_in')
+    plt.ylabel("Eccentricity")
+    plt.xlabel("Computer Wall time")
+
+
+    # then Semimajor axis vs time
+
+    plt.cla()
+    plt.plot(computer_time, semimajor_axis_in, label='Semimajor Axis Out')
+    plt.plot(computer_time, semimajor_axis_out, label='Semimajor Axis in')
+    plt.ylabel("Semimajor Axis")
+    plt.xlabel("Computer Wall time")
+
 
 def get_orbital_period(orbital_separation, total_mass):
     return 2 * np.pi * (orbital_separation ** 3 / (constants.G * total_mass)).sqrt()
