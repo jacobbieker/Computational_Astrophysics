@@ -38,6 +38,7 @@ and eccentricity of the inner and the outer binary, and their relative inclinati
 
 4. Find in the literature the masses, mass-loss rates of the three stars of θMuscae and their orbital parameters. 
  Generate a triple system with the appropriate orbital elements. 
+ Might need to use the new_binary_from_orbital_elements mentioned
 
 5. Answer the Questions at the bottom
 
