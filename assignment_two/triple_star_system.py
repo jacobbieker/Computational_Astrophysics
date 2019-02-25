@@ -77,10 +77,12 @@ class GravitationalStellar(object):
     def determine_timestep(self):
         star_timesteps = []
         for particle in self.particles:
-            mass_loss = particle.mass_change
-            print(particle)
-            delta_mass_max = self.stellar_mass_loss_timestep_fraction * particle.mass
-            star_timesteps.append(delta_mass_max / mass_loss)
+            mass_loss = particle.mass_change # MSun/yr
+            change = 1. / mass_loss # yr/MSun
+            change *= particle.mass # yr/MSun * MSun = yr
+            change *= self.stellar_mass_loss_timestep_fraction
+            #delta_mass_max = self.stellar_mass_loss_timestep_fraction * particle.mass
+            star_timesteps.append(change)
 
         return star_timesteps
 
@@ -111,12 +113,14 @@ class GravitationalStellar(object):
             star_timesteps = self.determine_timestep()
 
             smallest_timestep = max(star_timesteps)
+
             print("Smallest Timestep ", smallest_timestep)
 
-            smallest_timestep *= self.stellar_mass_loss_timestep_fraction
+            #smallest_timestep = 1. | units.yr
 
             # Starting mass
             prev_masses = self.particles.mass.copy()
+
 
             if self.integration_scheme == "gravity_first":
                 time = self.advance_gravity(time, smallest_timestep)
@@ -142,14 +146,17 @@ class GravitationalStellar(object):
             new_masses = self.particles.mass.copy()
             for i in range(len(self.particles)):
                 mass_change = ((new_masses[i] * 10**10) - (prev_masses[i]*10**10))
-                print("Mass Change: ", mass_change)
-                mass_change /= smallest_timestep
-                print("Mass Change: ", mass_change)
+                print("Mass Change: ", mass_change) # This is in MSun
+                mass_change /= smallest_timestep # Then this is MSun / [time]
+                #print("Mass Change: ", mass_change)
                 self.particles[i].mass_change = mass_change
             mass_changes_lit = [1.1E-5 | units.MSun / units.yr, 4.2E-7 | units.MSun / units.yr, 4.9E-8 | units.MSun / units.yr]
             for i in range(len(self.particles)):
                 self.particles[i].mass_change =mass_changes_lit[i]
-                print(self.particles)
+                #print(self.particles)
+
+            print("End time: ", end_time)
+            print("Current Time: ", time)
 
             if time >= delta_time_diagnostic:
                 # Sees if diagnositcs should be printed out
@@ -191,19 +198,19 @@ class GravitationalStellar(object):
                     print("Binary ionized or merged")
                     break
 
-            self.gravity.stop()
-            self.stellar.stop()
+        self.gravity.stop()
+        self.stellar.stop()
 
-            end_time_all = t.time()
+        end_time_all = t.time()
 
-            total_time_elapsed = end_time_all - start_time_all
+        total_time_elapsed = end_time_all - start_time_all
 
-            self.elapsed_total_time += total_time_elapsed
+        self.elapsed_total_time += total_time_elapsed
 
-            self.elapsed_amuse_time = self.elapsed_total_time - self.elapsed_sim_time
+        self.elapsed_amuse_time = self.elapsed_total_time - self.elapsed_sim_time
 
-            return self.timestep_history, self.semimajor_axis_in_history, self.eccentricity_in_history, \
-                   self.semimajor_axis_out_history, self.eccentricity_out_history
+        return self.timestep_history, self.semimajor_axis_in_history, self.eccentricity_in_history, \
+               self.semimajor_axis_out_history, self.eccentricity_out_history
 
     def advance_stellar(self, timestep, delta_time):
         Initial_Energy = self.gravity.kinetic_energy + self.gravity.potential_energy
@@ -376,7 +383,7 @@ mean_anomaly = 180
 argument_of_perigee = 180
 longitude_of_the_ascending_node = 0
 
-stellar_mass_loss_fraction = 0.01
+stellar_mass_loss_fraction = 0.3
 
 M1 = 60 | units.MSun
 M2 = 30 | units.MSun
@@ -437,7 +444,6 @@ grav_stellar.set_initial_parameters(semimajor_axis_init, eccentricity_init,
 
 grav_stellar.set_gravity(semimajor_axis_out_init)
 print("Done Set Gravity")
-
 
 timestep_history, semimajor_axis_in_history, eccentricity_in_history, \
 semimajor_axis_out_history, eccentricity_out_history = grav_stellar.evolve_model(end_time)
