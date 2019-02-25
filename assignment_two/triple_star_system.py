@@ -140,7 +140,7 @@ class GravitationalStellar(object):
             new_masses = self.particles.mass
             for i in range(len(self.particles)):
                 # TODO Come up with better method to update mass loss
-                mass_change = (prev_masses[i] - new_masses[i]) / (self.stellar_mass_loss_timestep_fraction | units.yr)
+                mass_change = (new_masses[i] - prev_masses[i]) / (self.stellar_mass_loss_timestep_fraction | units.yr)
                 self.particles[i].mass_change = mass_change
 
             if time >= delta_time_diagnostic:
