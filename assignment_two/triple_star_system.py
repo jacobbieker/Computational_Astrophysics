@@ -119,7 +119,7 @@ class GravitationalStellar(object):
 
             self.times = [time]
             self.masses = [triple.mass.copy()]
-            while time < end_time:
+            while time <= end_time:
                 time += 1.e-3|units.Myr
                 self.stellar.evolve_model(stellar_start_time+time)
                 self.channel_from_stellar.copy_attributes(["mass"])
@@ -234,6 +234,7 @@ class GravitationalStellar(object):
 
         if self.interpolate:
             interpolate_t = timestep - self.stellar_time
+            print(interpolate_t)
             i = int(interpolate_t.value_in(units.Myr)/1.e-3)
             mass = self.masses[i] + (interpolate_t-self.times[i])*(self.masses[i+1]-self.masses[i])/(1.e-3|units.Myr)
             self.particles.mass = mass
