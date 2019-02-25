@@ -23,8 +23,8 @@ import time as t
 
 class GravitationalStellar(object):
 
-    def __init__(self, integration_scheme="interlaced", stellar_mass_loss_timestep_fraction=0.1, gravity_model=SeBa,
-                 stellar_model=Hermite, verbose=True):
+    def __init__(self, integration_scheme="interlaced", stellar_mass_loss_timestep_fraction=0.1, gravity_model=Hermite,
+                 stellar_model=SeBa, verbose=True):
         self.integration_scheme = integration_scheme
         self.stellar_mass_loss_timestep_fraction = stellar_mass_loss_timestep_fraction
         self.particles = None
