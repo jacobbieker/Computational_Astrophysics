@@ -37,8 +37,8 @@ import time as t
 
 class GravitationalStellar(object):
 
-    def __init__(self, integration_scheme="interlaced", stellar_mass_loss_timestep_fraction=0.1, gravity_model=SeBa,
-                 stellar_model=Hermite, verbose=True):
+    def __init__(self, integration_scheme="interlaced", stellar_mass_loss_timestep_fraction=0.1, gravity_model=Hermite,
+                 stellar_model=SeBa, verbose=True):
         self.integration_scheme = integration_scheme
         self.stellar_mass_loss_timestep_fraction = stellar_mass_loss_timestep_fraction
         self.particles = None
@@ -344,9 +344,9 @@ semimajor_axis_out_init = 100 | units.AU
 
 stellar_mass_loss_fraction = 0.9
 
-M1 = 60
-M2 = 30
-M3 = 20
+M1 = 60 | units.MSun
+M2 = 30 | units.MSun
+M3 = 20 | units.MSun
 period_init = 19 | units.day
 semimajor_axis_init = 0.63 | units.AU
 
@@ -362,7 +362,7 @@ triple[2].mass = M3
 grav_stellar = GravitationalStellar(stellar_mass_loss_timestep_fraction=stellar_mass_loss_fraction)
 grav_stellar.add_particles(triple)
 triple = grav_stellar.age_stars(stellar_start_time)
-
+exit()
 # Inner binary
 tmp_stars = Particles(2)
 tmp_stars[0].mass = triple[0].mass
