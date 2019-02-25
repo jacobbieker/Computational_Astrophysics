@@ -114,7 +114,7 @@ class GravitationalStellar(object):
             smallest_timestep *= self.stellar_mass_loss_timestep_fraction
 
             # Starting mass
-            prev_masses = self.particles.mass
+            prev_masses = self.particles.mass.copy()
 
             if self.integration_scheme == "gravity_first":
                 time = self.advance_gravity(time, smallest_timestep)
@@ -137,9 +137,10 @@ class GravitationalStellar(object):
                 delta_energy_stellar += delta_energy
 
             # Now update the mass loss after the timestep
-            new_masses = self.particles.mass
+            new_masses = self.particles.mass.copy()
             for i in range(len(self.particles)):
-                mass_change = ((new_masses[i] - prev_masses[i]) / (self.stellar_mass_loss_timestep_fraction )) * 1 | 1/units.yr
+                mass_change = (new_masses[i] - prev_masses[i])
+                mass_change /= smallest_timestep
                 self.particles[i].mass_change = mass_change
                 print(self.particles[0])
 
@@ -362,8 +363,13 @@ def get_semi_major_axis(orbital_period, total_mass):
 eccentricity_init = 0.2
 eccentricity_out_init = 0.6
 semimajor_axis_out_init = 100 | units.AU
+mutual_inclination = 50  # Between inner and outer binary
+inclination = 30  # Between the inner two stars
+mean_anomaly = 180
+argument_of_perigee = 180
+longitude_of_the_ascending_node = 0
 
-stellar_mass_loss_fraction = 0.9
+stellar_mass_loss_fraction = 0.1
 
 M1 = 60 | units.MSun
 M2 = 30 | units.MSun
@@ -379,7 +385,7 @@ triple = Particles(3)
 triple[0].mass = M1
 triple[1].mass = M2
 triple[2].mass = M3
-
+print("Done initial Conditions")
 grav_stellar = GravitationalStellar(stellar_mass_loss_timestep_fraction=stellar_mass_loss_fraction)
 grav_stellar.add_particles(triple)
 triple = grav_stellar.age_stars(stellar_start_time)
@@ -394,11 +400,7 @@ else:
     period_init = get_orbital_period(semimajor_axis_init, triple[0].mass + triple[1].mass)
 
 delta_time = 0.1 * period_init
-mutual_inclination = 50  # Between inner and outer binary
-inclination = 30  # Between the inner two stars
-mean_anomaly = 180
-argument_of_perigee = 180
-longitude_of_the_ascending_node = 0
+
 
 # Inner binary
 
@@ -421,11 +423,14 @@ tmp_stars.move_to_center()
 
 triple.position = tmp_stars.position
 triple.velocity = tmp_stars.velocity
+print("Done Binaries  Conditions")
 
 grav_stellar.set_initial_parameters(semimajor_axis_init, eccentricity_init,
                                     semimajor_axis_out_init, eccentricity_out_init)
 
 grav_stellar.set_gravity(semimajor_axis_out_init)
+print("Done Set Gravity")
+
 
 timestep_history, semimajor_axis_in_history, eccentricity_in_history, \
 semimajor_axis_out_history, eccentricity_out_history = grav_stellar.evolve_model(end_time)

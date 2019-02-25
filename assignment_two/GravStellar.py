@@ -99,6 +99,9 @@ class GravitationalStellar(object):
 
             smallest_timestep *= self.stellar_mass_loss_timestep_fraction
 
+            # Starting mass
+            prev_masses = self.particles.mass
+
             if self.integration_scheme == "gravity_first":
                 time = self.advance_gravity(time, smallest_timestep)
                 stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, smallest_timestep)
@@ -109,7 +112,7 @@ class GravitationalStellar(object):
 
             else:
 
-                half_timestep = float(smallest_timestep / 2.)
+                half_timestep = smallest_timestep / 2.
 
                 stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, half_timestep)
 
@@ -118,6 +121,13 @@ class GravitationalStellar(object):
                 stellar_time_point, delta_energy = self.advance_stellar(stellar_time_point, half_timestep)
 
                 delta_energy_stellar += delta_energy
+
+            # Now update the mass loss after the timestep
+            new_masses = self.particles.mass
+            for i in range(len(self.particles)):
+                mass_change = ((new_masses[i] - prev_masses[i]) / (self.stellar_mass_loss_timestep_fraction )) * 1 | 1/units.yr
+                self.particles[i].mass_change = mass_change
+                print(self.particles[0])
 
             if time >= delta_time_diagnostic:
                 # Sees if diagnositcs should be printed out
@@ -221,7 +231,18 @@ class GravitationalStellar(object):
 
         self.stellar_time = stellar_start_time
 
+        # Set the mass loss rate for the stars here: based off the book
+        mass_changes_lit = [1.1E-5 | units.MSun / units.yr, 4.2E-7 | units.MSun / units.yr, 4.9E-8 | units.MSun / units.yr]
+        for i in range(len(self.particles)):
+            self.particles[i].mass_change =mass_changes_lit[i]
+
+
         end_time_all = t.time()
+
+        if self.verbose:
+            print("T=", self.stellar.model_time.in_(units.Myr))
+            print("M=", self.stellar.particles.mass.in_(units.MSun))
+            print("Masses at time T:", self.particles[0].mass, self.particles[1].mass, self.particles[2].mass)
 
         self.elapsed_sim_time += end_sim_time - start_sim_time
 
