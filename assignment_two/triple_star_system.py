@@ -78,6 +78,7 @@ class GravitationalStellar(object):
         star_timesteps = []
         for particle in self.particles:
             mass_loss = particle.mass_change
+            print(particle)
             delta_mass_max = self.stellar_mass_loss_timestep_fraction * particle.mass
             star_timesteps.append(delta_mass_max / mass_loss)
 
@@ -109,7 +110,8 @@ class GravitationalStellar(object):
 
             star_timesteps = self.determine_timestep()
 
-            smallest_timestep = min(star_timesteps)
+            smallest_timestep = max(star_timesteps)
+            print("Smallest Timestep ", smallest_timestep)
 
             smallest_timestep *= self.stellar_mass_loss_timestep_fraction
 
@@ -139,10 +141,15 @@ class GravitationalStellar(object):
             # Now update the mass loss after the timestep
             new_masses = self.particles.mass.copy()
             for i in range(len(self.particles)):
-                mass_change = (new_masses[i] - prev_masses[i])
+                mass_change = ((new_masses[i] * 10**10) - (prev_masses[i]*10**10))
+                print("Mass Change: ", mass_change)
                 mass_change /= smallest_timestep
+                print("Mass Change: ", mass_change)
                 self.particles[i].mass_change = mass_change
-                print(self.particles[0])
+            mass_changes_lit = [1.1E-5 | units.MSun / units.yr, 4.2E-7 | units.MSun / units.yr, 4.9E-8 | units.MSun / units.yr]
+            for i in range(len(self.particles)):
+                self.particles[i].mass_change =mass_changes_lit[i]
+                print(self.particles)
 
             if time >= delta_time_diagnostic:
                 # Sees if diagnositcs should be printed out
@@ -359,17 +366,17 @@ def get_semi_major_axis(orbital_period, total_mass):
 
 
 # Initial Conditions
-
+print("Started")
 eccentricity_init = 0.2
 eccentricity_out_init = 0.6
 semimajor_axis_out_init = 100 | units.AU
-mutual_inclination = 50  # Between inner and outer binary
+mutual_inclination = 0  # Between inner and outer binary
 inclination = 30  # Between the inner two stars
 mean_anomaly = 180
 argument_of_perigee = 180
 longitude_of_the_ascending_node = 0
 
-stellar_mass_loss_fraction = 0.1
+stellar_mass_loss_fraction = 0.01
 
 M1 = 60 | units.MSun
 M2 = 30 | units.MSun

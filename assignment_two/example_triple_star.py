@@ -67,7 +67,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     print("T=", stellar.model_time.in_(units.Myr))
     print("M=", stellar.particles.mass.in_(units.MSun))
     print("Masses at time T:", M1, M2, M3)
-    exit()
 
     # Inner binary
 
@@ -163,8 +162,7 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     while time < t_end:
 
         Pin = orbital_period(ain, triple[0].mass+triple[1].mass)
-        dt = dtse_fac*Pin
-        dt *= random.random()
+        dt = 1 | units.day
 
         if scheme == 1:
 
