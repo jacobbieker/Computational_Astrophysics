@@ -67,6 +67,7 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     print("T=", stellar.model_time.in_(units.Myr))
     print("M=", stellar.particles.mass.in_(units.MSun))
     print("Masses at time T:", M1, M2, M3)
+    exit()
 
     # Inner binary
 
