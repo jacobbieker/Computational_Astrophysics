@@ -56,7 +56,7 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
                        xsize=10, ysize=8)
     color = get_distinct(4)
 
-    time, ai, ei, ao, eo =
+    time, ai, ei, ao, eo = computer_time, semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out
     plt.plot(ai, ei, c=color[0], label='inner')
     plt.plot(ao, eo, c=color[1], label='outer')
 
@@ -99,19 +99,22 @@ def get_semi_major_axis(orbital_period, total_mass):
 
 
 # Initial Conditions
-mutual_inclination = 30
-ma = 180
-aop = 180
-lon = 0
+
+eccentricity_init = 0.2
+eccentricity_out_init = 0.6
+semimajor_axis_out_init = 100|units.AU
+
+stellar_mass_loss_fraction = 0.1
+
 
 M1 = 60
 M2 = 30
 M3 = 20
-period = 19 | units.day
-separation = 0.63 | units.AU
+period_init = 19 | units.day
+semimajor_axis_init = 0.63 | units.AU
 
 
-period_or_semimajor = 1
+period_or_semimajor = 1 # 1: Get semimajor_axis from period, Otherwise: get period from semimjaor_axis
 
 stellar_start_time = 4.0 | units.Myr
 end_time = 0.55|units.Myr
@@ -120,7 +123,7 @@ triple[0].mass = M1
 triple[1].mass = M2
 triple[2].mass = M3
 
-grav_stellar = GravitationalStellar()
+grav_stellar = GravitationalStellar(stellar_mass_loss_timestep_fraction=stellar_mass_loss_fraction)
 grav_stellar.add_particles(triple)
 triple = grav_stellar.age_stars(stellar_start_time)
 
@@ -131,20 +134,27 @@ tmp_stars[1].mass = triple[1].mass
 
 
 if period_or_semimajor == 1:
-    semimajor_axis_init = get_semi_major_axis(period, triple[0].mass+triple[1].mass)
+    semimajor_axis_init = get_semi_major_axis(period_init, triple[0].mass+triple[1].mass)
 else:
-    period_init = get_orbital_period(separation, triple[0].mass+triple[1].mass)
+    period_init = get_orbital_period(semimajor_axis_init, triple[0].mass+triple[1].mass)
 
 delta_time = 0.1*period_init
+mutual_inclination = 0 # Between inner and outer binary
+inclination = 30 # Between the inner two stars
+mean_anomaly = 180
+argument_of_perigee = 180
+longitude_of_the_ascending_node = 0
 
-r, v = get_position(triple[0].mass, triple[1].mass, eccentricity_init, semimajor_axis_init, ma, inc, aop, lon, delta_time)
-tmp_stars[0].position = r
-tmp_stars[1].position = v
+# Inner binary
+
+r, v = get_position(triple[0].mass, triple[1].mass, eccentricity_init, semimajor_axis_init, mean_anomaly, inclination, argument_of_perigee, longitude_of_the_ascending_node, delta_time)
+tmp_stars[1].position = r
+tmp_stars[1].velocity = v
 tmp_stars.move_to_center()
 
 # Outer binary
 
-r, v = get_position(triple[0].mass+triple[1].mass, triple[2].mass, eccentricity_out_init, semimajor_axis_out_init, 0, 0, 0, 0, delta_time)
+r, v = get_position(triple[0].mass+triple[1].mass, triple[2].mass, eccentricity_out_init, semimajor_axis_out_init, 0, mutual_inclination, 0, 0, delta_time)
 tertiary = Particle()
 tertiary.mass = triple[2].mass
 tertiary.position = r
@@ -160,4 +170,7 @@ grav_stellar.set_initial_parameters(semimajor_axis_init, eccentricity_init,
 
 grav_stellar.set_gravity(semimajor_axis_out_init)
 
-grav_stellar.evolve_model(end_time)
+timestep_history, semimajor_axis_in_history, eccentricity_in_history, \
+semimajor_axis_out_history, eccentricity_out_history = grav_stellar.evolve_model(end_time)
+
+plot_results(timestep_history, eccentricity_out_history, eccentricity_in_history, semimajor_axis_in_history, semimajor_axis_out_history, stellar_mass_loss_fraction)
