@@ -23,10 +23,13 @@ You can find the plots discussed here in the Assignment_two/Interesting.
 
 SmallN
 Time reversible
+FIXME: WHAT DOES TIME REVERSIBLE MEAN
 FIXME: MENTION THAT THIS IS THE FASTEST ONE AND PUT THE REFERENCE TO THE PLOT WE MADE?
+You can find the plots discussed here in the Assignment_two/Interesting. 
 
-From our test we determined that the interlaced temporal discretization method is the best method. Is also the fastest gravity simulator
-Assignment_two/Interesting.
+From our test we determined that the interlaced temporal discretization method is the best method. 
+FIXME: DID WE MAKE A PLOT THAT SHOWEDD THAT THE INTERLACED WAS THE FASTEST I THOUGHT WE DID The interlaced is also the fastest gravity simulator as #### plot shows.
+
 
 Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
 
