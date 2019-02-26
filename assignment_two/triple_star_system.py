@@ -119,7 +119,7 @@ class GravitationalStellar(object):
 
             self.times = [time]
             self.masses = [triple.mass.copy()]
-            while time <= end_time:
+            while time <= (end_time+(end_time/2.)):
                 time += 1.e-3|units.Myr
                 self.stellar.evolve_model(stellar_start_time+time)
                 self.channel_from_stellar.copy_attributes(["mass"])
