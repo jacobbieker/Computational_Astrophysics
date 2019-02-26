@@ -17,7 +17,8 @@ Assignment_two/Interesting.
 
 Hermite
 This simulator is non-simpletic, meaning area is not convserved.
-Looking at the ALL_eccentricity vs time at 60 inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the plots it is clear that across all time steps 1 inclination is not stable. 
+Looking at the ALL_eccentricity vs time at ~60 degrees inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
+There are no major differences ALL_semimajor vs time for all the time steps plots between Huayno and Hermite simulation results other then minor difference that can be seen in the diagnostic (which have not stellar evoltion)plots that show different trends which may mean that the gravity simulations' differences in turn be what causes slight differences in the trends of the other integration methods where stellar evolution does play a role.
 
 You can find the plots discussed here in the Assignment_two/Interesting. 
 
