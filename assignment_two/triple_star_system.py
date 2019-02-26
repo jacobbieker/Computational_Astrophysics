@@ -476,7 +476,7 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("semimajor_axis_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
+    plt.savefig("ALL_semimajor_axis_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
                                                                                        grav_stellars[0].inclination, grav_model) + ".png")
     plt.cla()
 
@@ -517,7 +517,7 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Eccentricity/(Initial Eccentricity)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("eccentricity_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
+    plt.savefig("ALL_eccentricity_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
                                                                                grav_stellars[0].inclination, grav_model) + ".png")
     plt.cla()
 
@@ -557,7 +557,7 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Inclination/(Initial Inclination)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("inclination_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
+    plt.savefig("ALL_inclination_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
                                                                                              grav_stellars[0].inclination, grav_model) + ".png")
     plt.cla()
 
