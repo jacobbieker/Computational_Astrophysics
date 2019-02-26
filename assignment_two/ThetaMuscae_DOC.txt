@@ -3,29 +3,34 @@ Theta Muscae is a triple star with the masses of WR48: 60, O6: 40, and O9.5III: 
 In order to accurately simulate a three-body star system you need to take in to account stellar evolution in addition to the gravitational simulator. Our task was to figure out what is the best method to integrate the stellar evolution and the gravity simulation. In order to accomplish this, we compare three integrator methods, three gravity solvers (Huayno, Hermite, and SmallN) across many different timesteps.
 Temporal discretization involves integration of every term in differential equations over time step.
 
-The interlaced temporal discretization method is when both the gravity simulator and the stellar evolution simulator are synchronized at regular time intervals
-Allow the time-step to depend on the rate of mass loss and prevent the total mass loss from exceeding a limit
+We plot the results for four intergation methods; diagnostic where there is no stellar evolution, stellar_first: start with stellar evolution, and gravity_first: gravity simulator goes first, and the interlaced temporal discretization method. The interlaced temporal discretization method is when both the gravity simulator and the stellar evolution simulator are synchronized at regular time intervals
+Allow the time-step to depend on the rate of mass loss and prevent the total mass loss from exceeding a limit set by the stellar_mass_fraction_loss variable, which ranged from 0.001 to 0.000001 of the total stellar mass of any of the stars.
 
-We experimented with timesteps 0.001, 0.0001, 0.00005, 0.00001, 0.000005, 0.0000001. In addition, we experimented with inclinations of 1, 30, 60, 90
+We experimented with dynamical timesteps based off a maximum stellar mass loss of 0.001, 0.0001, 0.00005, 0.00001, 0.000005, 0.0000001 of the total stellar mass for any of the given stars. In addition, we experimented with inclinations of 0.573, 28.648, 57.296, and 85.944 degrees. 
 
-Our plot for Timestep vs Walltime shows that the larger the timestep the longer it takes to run 
+Our plot for Timestep vs Walltime shows that the larger the timestep the longer it takes to run, but the amount of time spent in the simulation code vs the AMUSE framework is vastly different based on which gravity code was used and the timestep chosen. For the SmallN code, very little time was spent in the simulation code, instead much more time was spent in the framework once the stellar mass fraction dropped below around 0.0001, while for the Huayno code, the amount of time spent in AMUSE did not suprass the amount of time spent in the simulation code until the stellar mass fraction of less than 0.00002, around an order of magnitude smaller than for the SmallN code.
 
 Huayno
-Simpletic 
+This simulator is simpletic, meaning that it conserves area.
 Assignment_two/Interesting.
 
 
 Hermite
-Non-simpletic
-Looking at the ALL_eccentricity vs time at 60 inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the plots it is clear that across all time steps 1 inclination is not stable. 
+This simulator is non-simpletic, meaning area is not convserved.
+Looking at the ALL_eccentricity vs time at ~60 degrees inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
+There are no major differences ALL_semimajor vs time for all the time steps plots between Huayno and Hermite simulation results other then minor difference that can be seen in the diagnostic (which have not stellar evoltion)plots that show different trends which may mean that the gravity simulations' differences in turn be what causes slight differences in the trends of the other integration methods where stellar evolution does play a role.
 
 You can find the plots discussed here in the Assignment_two/Interesting. 
 
 SmallN
 Time reversible
+FIXME: WHAT DOES TIME REVERSIBLE MEAN
+FIXME: MENTION THAT THIS IS THE FASTEST ONE AND PUT THE REFERENCE TO THE PLOT WE MADE?
+You can find the plots discussed here in the Assignment_two/Interesting. 
 
-From our test we determined that the interlaced temporal discretization method is the best method. Is also the fastest gravity simulator
-Assignment_two/Interesting.
+From our test we determined that the interlaced temporal discretization method is the best method. 
+FIXME: DID WE MAKE A PLOT THAT SHOWEDD THAT THE INTERLACED WAS THE FASTEST I THOUGHT WE DID The interlaced is also the fastest gravity simulator as #### plot shows.
+
 
 Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
 

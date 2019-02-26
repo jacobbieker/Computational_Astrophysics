@@ -796,7 +796,7 @@ def get_timestep_walltime_differences(gravity_model):
     Produces the dependence of the timestep on the wall time for a given gravity model
     :param gravity_model: Gravity model to use, Hermite, Huayno, or SmallN
     """
-    timesteps = np.linspace(0.001, 0.0000001, 25)
+    timesteps = np.linspace(0.01, 0.0000001, 25)
     wall_times = []
     sim_times = []
     amuse_times = []
@@ -831,7 +831,7 @@ def get_timestep_walltime_differences(gravity_model):
 if __name__ in ('__main__', '__plot__'):
     gravity_model = Huayno # Gravity model to use
 
-    do_timestep = False # Whether to calculate the timestep dependence or not
+    do_timestep = True # Whether to calculate the timestep dependence or not
     if do_timestep:
         get_timestep_walltime_differences(gravity_model)
 
