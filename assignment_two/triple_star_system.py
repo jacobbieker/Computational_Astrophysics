@@ -654,6 +654,11 @@ def generate_initial_muscea(integration_method='interlaced', stellar_mass_loss_f
 
 
 def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
+    """
+    Runs the simulations for roughly 0, 30, 60, and 90 degree inclination
+    :param gravity_model: Gravity model to use, of Huayno, Hermite, and SmallN
+    :param stellar_mass_loss_fraction: Stellar Mass Loss fraction to use to determine timestep
+    """
     timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
     semimajor_axis_out_history, eccentricity_out_history, grav_stellar, inclination_history = generate_initial_muscea("interlaced",
                                                                                                                       stellar_mass_loss_fraction=stellar_mass_loss_fraction,
@@ -785,13 +790,11 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
                      [grav_stellar, sgrav_stellar, ggrav_stellar, dgrav_stellar],
                      [inclination_history, sinclination_history, ginclination_history, dinclination_history])
 
-    return grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time
 
 def get_timestep_walltime_differences(gravity_model):
     """
-
-    :param gravity_model:
-    :return:
+    Produces the dependence of the timestep on the wall time for a given gravity model
+    :param gravity_model: Gravity model to use, Hermite, Huayno, or SmallN
     """
     timesteps = np.linspace(0.001, 0.0000001, 25)
     wall_times = []
@@ -826,11 +829,13 @@ def get_timestep_walltime_differences(gravity_model):
 
 
 if __name__ in ('__main__', '__plot__'):
-    gravity_model = Huayno
-    do_timestep = False
+    gravity_model = Huayno # Gravity model to use
+
+    do_timestep = False # Whether to calculate the timestep dependence or not
     if do_timestep:
         get_timestep_walltime_differences(gravity_model)
 
-    stellar_mass_loss_fractions = [0.001, 0.0001, 0.00005, 0.00001, 0.000005, 0.000001]
+    stellar_mass_loss_fractions = [0.001, 0.0001, 0.00005, 0.00001, 0.000005, 0.000001] # Timesteps to run in the simulation
+    # Runs all the timesteps for all the integration schemes
     for fraction in stellar_mass_loss_fractions:
         run_simulation(gravity_model, fraction)
