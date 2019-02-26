@@ -1,0 +1,34 @@
+Theta Muscae is a triple star with the masses of WR48: 60, O6: 40, and O9.5III: 20 solar masses at for the purposes of the simulation we age them to 4 Gyr where there masses are 40, 29, 20 solar masses respectively. From the literature we got that the period of the orbit of Wr48 and the O6 star is 19 days and that together with the O9.5III completes one orbit every five years. 
+
+In order to accurately simulate a three-body star system you need to take in to account stellar evolution in addition to the gravitational simulator. Our task was to figure out what is the best method to integrate the stellar evolution and the gravity simulation. In order to accomplish this, we compare three integrator methods, three gravity solvers (Huayno, Hermite, and SmallN) across many different timesteps.
+Temporal discretization involves integration of every term in differential equations over time step.
+
+The interlaced temporal discretization method is when both the gravity simulator and the stellar evolution simulator are synchronized at regular time intervals
+Allow the time-step to depend on the rate of mass loss and prevent the total mass loss from exceeding a limit
+
+We experimented with timesteps 0.001, 0.0001, 0.00005, 0.00001, 0.000005, 0.0000001. In addition, we experimented with inclinations of 1, 30, 60, 90
+
+Our plot for Timestep vs Walltime shows that the larger the timestep the longer it takes to run 
+
+Huayno
+Simpletic 
+Assignment_two/Interesting.
+
+
+Hermite
+Non-simpletic
+Looking at the ALL_eccentricity vs time at 60 inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the plots it is clear that across all time steps 1 inclination is not stable. 
+
+You can find the plots discussed here in the Assignment_two/Interesting. 
+
+SmallN
+Time reversible
+
+From our test we determined that the interlaced temporal discretization method is the best method. Is also the fastest gravity simulator
+Assignment_two/Interesting.
+
+Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
+
+The optimum time step depends on the mass-loss rate of the star with the strongest wind because that is the star that is the most active.
+The optimum time step depends on the initial relative inclination
+Average wall clock time does change for lower initial inclination 
