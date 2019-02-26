@@ -91,7 +91,7 @@ class GravitationalStellar(object):
 
         return star_timesteps
 
-    def evolve_model(self, end_time, number_steps=10000):
+    def evolve_model(self, end_time, number_steps=100):
 
         start_time_all = t.time()
 
@@ -167,7 +167,6 @@ class GravitationalStellar(object):
                 delta_energy_stellar += delta_energy
 
             #print("End time: ", end_time)
-            print("Current Time: ", time)
             total_mass = self.particles.mass.sum()
 
             semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
@@ -393,7 +392,7 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
 
     save_file = 'semi_and_eccen' \
-                + '_dtse={:.3f}'.format(stellar_mass_fraction) \
+                + '_dtse={:.7f}'.format(stellar_mass_fraction) \
                 + '.png'
     plt.savefig(save_file)
     plt.show()
@@ -404,24 +403,26 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     # First Eccentricity vs time
 
     plt.cla()
-    plt.plot(computer_time, eccentricity_out, label='Eccentricity_out')
-    plt.plot(computer_time, eccentricity_in, label='Eccentricity_in')
+    plt.plot(computer_time, eccentricity_out, label='Outer')
+    plt.plot(computer_time, eccentricity_in, label='Inner')
+    plt.legend(loc='best')
     plt.ylabel("Eccentricity/(Initial Eccentricity)")
     plt.xlabel("Time (years)")
-    plt.title("Wall Clock Time: {}\n Sim Time: {}".format(grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time))
+    plt.title("Wall Clock Time: {} s\n Sim Time: {} s".format(np.round(grav_stellar.elapsed_total_time, 3), np.round(grav_stellar.elapsed_sim_time, 3)))
     plt.show()
-    plt.savefig("eccentricity_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
+    plt.savefig("eccentricity_vs_time_dts={:.7f}_inc={:.3f}".format(stellar_mass_fraction, inclination) + ".png")
 
     # then Semimajor axis vs time
 
     plt.cla()
-    plt.plot(computer_time, semimajor_axis_in, label='Semimajor Axis Out')
-    plt.plot(computer_time, semimajor_axis_out, label='Semimajor Axis in')
+    plt.plot(computer_time, semimajor_axis_in, label="Outer")
+    plt.plot(computer_time, semimajor_axis_out, label='Inner')
+    plt.legend(loc='best')
     plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
     plt.xlabel("Time (years)")
-    plt.title("Wall Clock Time: {}\n Sim Time: {}".format(grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time))
+    plt.title("Wall Clock Time: {} s\n Sim Time: {} s".format(np.round(grav_stellar.elapsed_total_time, 3), np.round(grav_stellar.elapsed_sim_time, 3)))
     plt.show()
-    plt.savefig("semimajor_axis_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
+    plt.savefig("semimajor_axis_vs_time_dts={:.7f}_inc={:.3f}".format(stellar_mass_fraction, inclination) + ".png")
 
 
 def get_orbital_period(orbital_separation, total_mass):
@@ -437,12 +438,12 @@ eccentricity_init = 0.2
 eccentricity_out_init = 0.6
 semimajor_axis_out_init = 100 | units.AU
 mutual_inclination = 0  # Between inner and outer binary
-inclination = 60  # Between the inner two stars
+inclination = 20  # Between the inner two stars
 mean_anomaly = 180
 argument_of_perigee = 180
 longitude_of_the_ascending_node = 0
 
-stellar_mass_loss_fraction = 0.00001
+stellar_mass_loss_fraction = 0.000001
 
 M1 = 60 | units.MSun
 M2 = 30 | units.MSun
@@ -453,7 +454,7 @@ semimajor_axis_init = 0.63 | units.AU
 period_or_semimajor = 1  # 1: Get semimajor_axis from period, Otherwise: get period from semimjaor_axis
 
 stellar_start_time = 4.0 | units.Myr
-end_time = 0.055 | units.Myr
+end_time = 0.001 | units.Myr
 triple = Particles(3)
 triple[0].mass = M1
 triple[1].mass = M2
