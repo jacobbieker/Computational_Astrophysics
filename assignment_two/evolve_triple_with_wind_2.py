@@ -22,7 +22,7 @@ from amuse.io import store
 from amuse.ext.orbital_elements import new_binary_from_orbital_elements
 from amuse.ext.orbital_elements import orbital_elements_from_binary
 
-from amuse.community.symple.interface import symple	# symplectic
+#from amuse.community.symple.interface import symple	# symplectic
 from amuse.community.huayno.interface import Huayno	# symplectic
 from amuse.community.smalln.interface import SmallN	# time reversible
 from amuse.community.hermite0.interface import Hermite	# not symplectic
@@ -57,7 +57,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
 
     numpy.random.seed(42)
 
-    print "Initial masses:", M1, M2, M3
     triple = Particles(3)
     triple[0].mass = M1
     triple[1].mass = M2
@@ -73,13 +72,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     M1 = triple[0].mass
     M2 = triple[1].mass
     M3 = triple[2].mass
-    print "t=", stellar.model_time.in_(units.Myr)
-    print "M=", stellar.particles.mass.in_(units.MSun)
-    print "R=", stellar.particles.radius.in_(units.RSun)
-    print "L=", stellar.particles.luminosity.in_(units.LSun)
-    print "T=", stellar.particles.temperature.in_(units.K)
-    print "Mdot=", \
-        -stellar.particles.wind_mass_loss_rate.in_(units.MSun/units.yr)
 
     # Start the dynamics.
     # Inner binary:
@@ -92,11 +84,7 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
         ain_0 = semimajor_axis(Pin_0, M1+M2)
     else:
         Pin_0 = orbital_period(ain_0, M1+M2)
-    print 'Pin =', Pin_0
-        
-    print 'ain_0 =', ain_0
-    print 'M1+M2 =', M1+M2
-    print 'Pin_0 =', Pin_0.value_in(units.day), '[day]'
+
     #print 'semi:', semimajor_axis(Pin_0, M1+M2).value_in(units.AU), 'AU'
     #print 'period:', orbital_period(ain_0, M1+M2).value_in(units.day), '[day]'
     
@@ -126,11 +114,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     Mtriple = triple.mass.sum()
     Pout = orbital_period(aout_0, Mtriple)
 
-    print "T=", stellar.model_time.in_(units.Myr)
-    print "M=", stellar.particles.mass.in_(units.MSun)
-    print "Pout=", Pout.in_(units.Myr)
-    print 'tK =', ((M1+M2)/M3)*Pout**2*(1-eout_0**2)**1.5/Pin_0
-
     converter = nbody_system.nbody_to_si(triple.mass.sum(), aout_0)
 
     if integrator == 0:
@@ -145,12 +128,12 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
         gravity.parameters.inttype_parameter = 20
         gravity.parameters.timestep = (1./256)*Pin_0
     else:
-        gravity = symple(converter)
+        gravity = Huayno(converter)
         gravity.parameters.integrator = 10
         #gravity.parameters.timestep_parameter = 0.
         gravity.parameters.timestep = (1./128)*Pin_0
 
-    print gravity.parameters
+    print(gravity.parameters)
 
     gravity.particles.add_particles(triple)
     channel_from_framework_to_gd = triple.new_channel_to(gravity.particles)
@@ -168,13 +151,7 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
     time = 0.0 | t_end.unit
     t_se = t_stellar + time
 
-    print 't_end =', t_end
-    print 'dt_diag =', dt_diag
-
     ain, ein, aout, eout = get_orbital_elements_of_triple(triple)
-    print "Triple elements t=",  time,  \
-        "inner:", triple[0].mass, triple[1].mass, ain, ein, \
-        "outer:", triple[2].mass, aout, eout
 
     t = [time.value_in(units.Myr)]
     Mtot = triple.mass.sum()
@@ -198,7 +175,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
             masses.append(triple.mass.copy())
 
         time = 0.0 | t_end.unit
-        print '\ntimes:', times, '\n'
 
     # Evolve the system.
     
@@ -298,7 +274,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
 
         else:
 
-            print 'unknown option'
             sys.exit(0)
 
         if time >= t_diag:
@@ -310,17 +285,9 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
             Etot = Ekin + Epot
             dE = Etot_prev - Etot
             Mtot = triple.mass.sum()
-            print "T=", time, 
-            print "M=", Mtot, "(dM[SE]=", Mtot/Mtriple, ")",
-            print "E= ", Etot, "Q= ", Ekin/Epot,
-            print "dE=", (Etot_init-Etot)/Etot, "ddE=", (Etot_prev-Etot)/Etot, 
-            print "(dE[SE]=", dE_se/Etot, ")"
             Etot_init -= dE
             Etot_prev = Etot
             ain, ein, aout, eout = get_orbital_elements_of_triple(triple)
-            print "Triple elements t=",  t_stellar + time,  \
-                "inner:", triple[0].mass, triple[1].mass, ain, ein, \
-                "outer:", triple[2].mass, aout, eout
 
             t.append(time.value_in(units.yr))
             mtot.append(Mtot.value_in(units.MSun))
@@ -330,7 +297,6 @@ def evolve_triple_with_wind(M1, M2, M3, Pora, Pin_0, ain_0, aout_0,
             ecco.append(eout/eout_0)
 
             if eout > 1 or aout <= zero:
-                print "Binary ionized or merged"
                 break
 
     gravity.stop()
@@ -352,8 +318,6 @@ def main(M1, M2, M3, Pora, Pin, ain, aout, ein, eout,
         plt.figure(figsize=(12, 8))
 
     if scheme == 5:
-        if integrator != 3:
-            print 'Warning: scheme = 5 forces integrator = 3'
         integrator = 3
     srange = [1,scheme]		# 1 = no mass loss; other = mass loss
     				# assume scheme > 1
@@ -435,7 +399,6 @@ def main(M1, M2, M3, Pora, Pin, ain, aout, ein, eout,
     ax.get_yaxis().get_major_formatter().set_useOffset(False)
 
     plt.savefig(save_file, dpi=300)
-    print '\nSaved figure in file', save_file,'\n'
     if show: plt.show()
     
 def new_option_parser():
@@ -461,7 +424,7 @@ def new_option_parser():
                       dest="eout", type="float", default = 0.6,
                       help="orbital eccentricity [%default]")
     result.add_option("-i",
-                      dest="integrator", type="int", default = 2,
+                      dest="integrator", type="int", default = 0,
                       help="integration scheme [%default]")
     result.add_option("-I",
                       dest="interp", action="store_false", default = True,
@@ -476,7 +439,7 @@ def new_option_parser():
                       dest="M3", type="float", default = 20|units.MSun,
                       help="secondary mass [%default]")
     result.add_option("-n",
-                      dest="nsteps", type="int", default = 1000,
+                      dest="nsteps", type="int", default = 10000,
                       help="number of data points [%default]")
     result.add_option("--Pin", unit=units.day,
                       dest="Pin", type="float", default = 19|units.day,
@@ -491,7 +454,7 @@ def new_option_parser():
                       dest="show", action="store_false", default = True,
                       help="show plot on display [%default]")
     result.add_option("-t", unit=units.Myr,
-                      dest="t_end", type="float", default = 1.e-3|units.Myr,
+                      dest="t_end", type="float", default = 0.55|units.Myr,
                       help="end time of the dynamical simulation [%default]")
     result.add_option("--ts", unit=units.Myr,
                       dest="t_stellar", type="float", default = 4.|units.Myr,
@@ -506,5 +469,5 @@ if __name__ in ('__main__', '__plot__'):
     #                      separator = " [", suffix = "]")
 
     o, arguments  = new_option_parser().parse_args()
-    print o.__dict__
+    print(o.__dict__)
     main(**o.__dict__)

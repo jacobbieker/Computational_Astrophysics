@@ -135,18 +135,16 @@ class GravitationalStellar(object):
             smallest_timestep = min(star_timesteps)
 
             smallest_timestep = smallest_timestep.value_in(units.yr) | units.yr
-            print(smallest_timestep)
+            if time + smallest_timestep > delta_time_diagnostic:
+                smallest_timestep = delta_time_diagnostic - time
+            print(smallest_timestep.value_in(units.yr))
+            print(delta_time_diagnostic.value_in(units.yr))
 
             if self.integration_scheme == "gravity_first":
-
-                if time + smallest_timestep > delta_time_diagnostic:
-                    smallest_timestep = delta_time_diagnostic - time
                 time = self.advance_gravity(time, smallest_timestep)
                 stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, smallest_timestep)
 
             elif self.integration_scheme == "stellar_first":
-                if time + smallest_timestep > delta_time_diagnostic:
-                    smallest_timestep = delta_time_diagnostic - time
                 stellar_time_point, delta_energy_stellar = self.advance_stellar(stellar_time_point, smallest_timestep)
                 time = self.advance_gravity(time, smallest_timestep)
 
@@ -157,8 +155,6 @@ class GravitationalStellar(object):
                     time = self.advance_gravity(time, smallest_timestep)
 
             else:
-                if time + smallest_timestep > delta_time_diagnostic:
-                    smallest_timestep = delta_time_diagnostic - time
 
                 half_timestep = smallest_timestep / 2.
 
@@ -172,6 +168,21 @@ class GravitationalStellar(object):
 
             #print("End time: ", end_time)
             print("Current Time: ", time)
+            total_mass = self.particles.mass.sum()
+
+            semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
+
+            if self.verbose:
+                print("Triple elements t=", (4 | units.Myr) + time,
+                      "inner:", self.particles[0].mass, self.particles[1].mass, semimajor_axis_in, eccentricity_in,
+                      "outer:", self.particles[2].mass, semimajor_axis_out, eccentricity_out)
+
+            self.timestep_history.append(time.value_in(units.yr))
+            self.mass_history.append(total_mass.value_in(units.MSun))
+            self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
+            self.eccentricity_in_history.append(eccentricity_in / self.eccentricity_init)
+            self.semimajor_axis_out_history.append(semimajor_axis_out / self.semimajor_axis_out_init)
+            self.eccentricity_out_history.append(eccentricity_out / self.eccentricity_out_init)
 
             if time >= delta_time_diagnostic:
                 # Sees if diagnositcs should be printed out
@@ -203,12 +214,12 @@ class GravitationalStellar(object):
                           "inner:", self.particles[0].mass, self.particles[1].mass, semimajor_axis_in, eccentricity_in,
                           "outer:", self.particles[2].mass, semimajor_axis_out, eccentricity_out)
 
-                self.timestep_history.append(time.value_in(units.yr))
-                self.mass_history.append(total_mass.value_in(units.MSun))
-                self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
-                self.eccentricity_in_history.append(eccentricity_in / self.eccentricity_init)
-                self.semimajor_axis_out_history.append(semimajor_axis_out / self.semimajor_axis_out_init)
-                self.eccentricity_out_history.append(eccentricity_out / self.eccentricity_out_init)
+                #self.timestep_history.append(time.value_in(units.yr))
+                #self.mass_history.append(total_mass.value_in(units.MSun))
+                #self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
+                #self.eccentricity_in_history.append(eccentricity_in / self.eccentricity_init)
+                #self.semimajor_axis_out_history.append(semimajor_axis_out / self.semimajor_axis_out_init)
+                #self.eccentricity_out_history.append(eccentricity_out / self.eccentricity_out_init)
 
                 if eccentricity_out > 1.0 or semimajor_axis_out <= zero:
                     print("Binary ionized or merged")
@@ -261,6 +272,16 @@ class GravitationalStellar(object):
     def set_gravity(self, starting_semimajor_axis):
         converter = nbody_system.nbody_to_si(self.particles.mass.sum(), starting_semimajor_axis)
         self.gravity = self.gravity_model(converter)
+        # Set different timesteps based off the model
+        if self.gravity_model == Hermite:
+            self.gravity.parameters.timestep_parameter = 0.01
+        elif self.gravity_model == SmallN:
+            self.gravity.parameters.timestep_parameter = 0.01
+            self.gravity.parameters.full_unperturbed = 0
+        elif self.gravity_model == Huayno:
+            self.gravity.parameters.inttype_parameter = 20
+            self.gravity.parameters.timestep = (1./256)*period_init
+
         self.gravity.particles.add_particles(self.particles)
 
         self.channel_from_framework_to_gravity = self.particles.new_channel_to(self.gravity.particles)
@@ -358,7 +379,7 @@ symple
 
 
 def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axis_in, semimajor_axis_out,
-                 stellar_mass_fraction):
+                 stellar_mass_fraction, grav_stellar):
     x_label = "$a/a_{0}$"
     y_label = "$e/e_{0}$"
     fig = single_frame(x_label, y_label, logx=False, logy=False,
@@ -375,6 +396,7 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
                 + '_dtse={:.3f}'.format(stellar_mass_fraction) \
                 + '.png'
     plt.savefig(save_file)
+    plt.show()
     print('\nSaved figure in file', save_file, '\n')
 
     # Now plot the orbital params as function of timestep
@@ -384,8 +406,10 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.cla()
     plt.plot(computer_time, eccentricity_out, label='Eccentricity_out')
     plt.plot(computer_time, eccentricity_in, label='Eccentricity_in')
-    plt.ylabel("Eccentricity")
-    plt.xlabel("Computer Wall time")
+    plt.ylabel("Eccentricity/(Initial Eccentricity)")
+    plt.xlabel("Time (years)")
+    plt.title("Wall Clock Time: {}\n Sim Time: {}".format(grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time))
+    plt.show()
     plt.savefig("eccentricity_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
 
     # then Semimajor axis vs time
@@ -393,8 +417,10 @@ def plot_results(computer_time, eccentricity_out, eccentricity_in, semimajor_axi
     plt.cla()
     plt.plot(computer_time, semimajor_axis_in, label='Semimajor Axis Out')
     plt.plot(computer_time, semimajor_axis_out, label='Semimajor Axis in')
-    plt.ylabel("Semimajor Axis")
-    plt.xlabel("Computer Wall time")
+    plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
+    plt.xlabel("Time (years)")
+    plt.title("Wall Clock Time: {}\n Sim Time: {}".format(grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time))
+    plt.show()
     plt.savefig("semimajor_axis_vs_time_dts={:.3f}".format(stellar_mass_fraction) + ".png")
 
 
@@ -407,7 +433,6 @@ def get_semi_major_axis(orbital_period, total_mass):
 
 
 # Initial Conditions
-print("Started")
 eccentricity_init = 0.2
 eccentricity_out_init = 0.6
 semimajor_axis_out_init = 100 | units.AU
@@ -417,7 +442,7 @@ mean_anomaly = 180
 argument_of_perigee = 180
 longitude_of_the_ascending_node = 0
 
-stellar_mass_loss_fraction = 0.001
+stellar_mass_loss_fraction = 0.00001
 
 M1 = 60 | units.MSun
 M2 = 30 | units.MSun
@@ -428,13 +453,12 @@ semimajor_axis_init = 0.63 | units.AU
 period_or_semimajor = 1  # 1: Get semimajor_axis from period, Otherwise: get period from semimjaor_axis
 
 stellar_start_time = 4.0 | units.Myr
-end_time = 0.55 | units.Myr
+end_time = 0.055 | units.Myr
 triple = Particles(3)
 triple[0].mass = M1
 triple[1].mass = M2
 triple[2].mass = M3
-print("Done initial Conditions")
-grav_stellar = GravitationalStellar(stellar_mass_loss_timestep_fraction=stellar_mass_loss_fraction)
+grav_stellar = GravitationalStellar(stellar_mass_loss_timestep_fraction=stellar_mass_loss_fraction, gravity_model=Huayno)
 grav_stellar.add_particles(triple)
 triple = grav_stellar.age_stars(stellar_start_time)
 # Inner binary
@@ -481,6 +505,6 @@ print("Done Set Gravity")
 
 timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
 semimajor_axis_out_history, eccentricity_out_history = grav_stellar.evolve_model(end_time)
-
+print("Number of Timesteps: ", len(timestep_history))
 plot_results(timestep_history, eccentricity_out_history, eccentricity_in_history, semimajor_axis_in_history,
-             semimajor_axis_out_history, stellar_mass_loss_fraction)
+             semimajor_axis_out_history, stellar_mass_loss_fraction, grav_stellar)
