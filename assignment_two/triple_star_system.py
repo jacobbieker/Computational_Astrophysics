@@ -122,6 +122,7 @@ class GravitationalStellar(object):
         total_particle_mass = self.particles.mass.sum()
 
         semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
+        self.inclination, mutual_inclination = self.get_inclination()
         # Set the first original values
         self.timestep_history.append(time.value_in(units.Myr))
         self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
@@ -527,34 +528,8 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("ALL_semimajor_axis_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                       grav_stellars[0].inclination, grav_model) + ".png")
-    plt.cla()
-
-    for j in range(len(computer_times)):
-        plt.plot(computer_times[j], semimajor_axis_ins[j], label="inner, {}".format(schemes[j]))
-
-    plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
-    plt.title(
-        "Avg Wall Clock Time: {} s\n Avg Sim Time: {} s".format(np.round(avg_wall_time, 3), np.round(avg_sim_time, 3)))
-    plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
-    plt.xlabel("Time (years)")
-    plt.tight_layout()
-    plt.savefig("semimajor_axis_inner_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                         grav_stellars[0].inclination, grav_model) + ".png")
-    plt.cla()
-
-    for j in range(len(computer_times)):
-        plt.plot(computer_times[j], semimajor_axis_outs[j], label="outer, {}".format(schemes[j]))
-
-    plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
-    plt.title(
-        "Avg Wall Clock Time: {} s\n Avg Sim Time: {} s".format(np.round(avg_wall_time, 3), np.round(avg_sim_time, 3)))
-    plt.ylabel("Semimajor Axis/(Initial Semimajor Axis)")
-    plt.xlabel("Time (years)")
-    plt.tight_layout()
-    plt.savefig("semimajor_axis_outer_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                               grav_stellars[0].inclination, grav_model) + ".png")
+    plt.savefig("ALL_semimajor_axis_vs_time_inc={:.3f}_dts={:.8f}_grav={}_method=all".format(grav_stellars[0].inclination, stellar_mass_fraction,
+                                                                                        grav_model) + ".png")
     plt.cla()
 
     # Now plot the orbital params as function of timestep
@@ -568,34 +543,8 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Eccentricity/(Initial Eccentricity)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("ALL_eccentricity_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                               grav_stellars[0].inclination, grav_model) + ".png")
-    plt.cla()
-
-    for j in range(len(computer_times)):
-        plt.plot(computer_times[j], eccentricity_ins[j], label="inner, {}".format(schemes[j]))
-
-    plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
-    plt.title(
-        "Avg Wall Clock Time: {} s\n Avg Sim Time: {} s".format(np.round(avg_wall_time, 3), np.round(avg_sim_time, 3)))
-    plt.ylabel("Eccentricity/(Initial Eccentricity)")
-    plt.xlabel("Time (years)")
-    plt.tight_layout()
-    plt.savefig("eccentricity_inner_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                       grav_stellars[0].inclination, grav_model) + ".png")
-    plt.cla()
-
-    for j in range(len(computer_times)):
-        plt.plot(computer_times[j], eccentricity_outs[j], label="outer, {}".format(schemes[j]))
-
-    plt.legend(loc='best', ncol=1, shadow=False, fontsize=20)
-    plt.title(
-        "Avg Wall Clock Time: {} s\n Avg Sim Time: {} s".format(np.round(avg_wall_time, 3), np.round(avg_sim_time, 3)))
-    plt.ylabel("Eccentricity/(Initial Eccentricity)")
-    plt.xlabel("Time (years)")
-    plt.tight_layout()
-    plt.savefig("eccentricity_outer_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                             grav_stellars[0].inclination, grav_model) + ".png")
+    plt.savefig("ALL_eccentricity_vs_time_inc={:.3f}_dts={:.8f}_grav={}_method=all".format(grav_stellars[0].inclination, stellar_mass_fraction,
+                                                                                grav_model) + ".png")
     plt.cla()
 
 
@@ -608,8 +557,8 @@ def plot_all_results(computer_times, eccentricity_outs, eccentricity_ins, semima
     plt.ylabel("Inclination/(Initial Inclination)")
     plt.xlabel("Time (years)")
     plt.tight_layout()
-    plt.savefig("ALL_inclination_vs_time_dts={:.8f}_inc={:.3f}_grav={}_method=all".format(stellar_mass_fraction,
-                                                                                             grav_stellars[0].inclination, grav_model) + ".png")
+    plt.savefig("ALL_inclination_vs_time_inc={:.3f}_dts={:.8f}_grav={}_method=all".format(grav_stellars[0].inclination, stellar_mass_fraction,
+                                                                                         grav_model) + ".png")
     plt.cla()
 
 
@@ -687,6 +636,8 @@ def generate_initial_muscea(integration_method='interlaced', stellar_mass_loss_f
     triple.position = tmp_stars.position
     triple.velocity = tmp_stars.velocity
 
+    grav_stellar.add_particles(triple)
+
     grav_stellar.set_initial_parameters(semimajor_axis_init, eccentricity_init,
                                         semimajor_axis_out_init, eccentricity_out_init, period_init)
 
@@ -706,22 +657,22 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
     timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
     semimajor_axis_out_history, eccentricity_out_history, grav_stellar, inclination_history = generate_initial_muscea("interlaced",
                                                                                                                       stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                      inclination=90, gravity_model=gravity_model)
+                                                                                                                      inclination=0.01, gravity_model=gravity_model)
 
     stimestep_history, smass_history, ssemimajor_axis_in_history, seccentricity_in_history, \
     ssemimajor_axis_out_history, seccentricity_out_history, sgrav_stellar, sinclination_history = generate_initial_muscea("stellar_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=90, gravity_model=gravity_model)
+                                                                                                                          inclination=0.01, gravity_model=gravity_model)
 
     gtimestep_history, gmass_history, gsemimajor_axis_in_history, geccentricity_in_history, \
     gsemimajor_axis_out_history, geccentricity_out_history, ggrav_stellar, ginclination_history = generate_initial_muscea("gravity_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=90, gravity_model=gravity_model)
+                                                                                                                          inclination=0.01, gravity_model=gravity_model)
 
     dtimestep_history, dmass_history, dsemimajor_axis_in_history, deccentricity_in_history, \
     dsemimajor_axis_out_history, deccentricity_out_history, dgrav_stellar, dinclination_history = generate_initial_muscea("diagnostic",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=90, gravity_model=gravity_model)
+                                                                                                                          inclination=0.01, gravity_model=gravity_model)
 
     plot_all_results([timestep_history, stimestep_history, gtimestep_history, dtimestep_history],
                      [eccentricity_out_history, seccentricity_out_history, geccentricity_out_history,
@@ -739,22 +690,22 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
     timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
     semimajor_axis_out_history, eccentricity_out_history, grav_stellar, inclination_history = generate_initial_muscea("interlaced",
                                                                                                                       stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                      inclination=60, gravity_model=gravity_model)
+                                                                                                                      inclination=1., gravity_model=gravity_model)
 
     stimestep_history, smass_history, ssemimajor_axis_in_history, seccentricity_in_history, \
     ssemimajor_axis_out_history, seccentricity_out_history, sgrav_stellar, sinclination_history = generate_initial_muscea("stellar_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=60, gravity_model=gravity_model)
+                                                                                                                          inclination=1., gravity_model=gravity_model)
 
     gtimestep_history, gmass_history, gsemimajor_axis_in_history, geccentricity_in_history, \
     gsemimajor_axis_out_history, geccentricity_out_history, ggrav_stellar, ginclination_history = generate_initial_muscea("gravity_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=60, gravity_model=gravity_model)
+                                                                                                                          inclination=1., gravity_model=gravity_model)
 
     dtimestep_history, dmass_history, dsemimajor_axis_in_history, deccentricity_in_history, \
     dsemimajor_axis_out_history, deccentricity_out_history, dgrav_stellar, dinclination_history = generate_initial_muscea("diagnostic",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=60, gravity_model=gravity_model)
+                                                                                                                          inclination=1., gravity_model=gravity_model)
 
     plot_all_results([timestep_history, stimestep_history, gtimestep_history, dtimestep_history],
                      [eccentricity_out_history, seccentricity_out_history, geccentricity_out_history,
@@ -771,22 +722,22 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
     timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
     semimajor_axis_out_history, eccentricity_out_history, grav_stellar, inclination_history = generate_initial_muscea("interlaced",
                                                                                                                       stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                      inclination=30, gravity_model=gravity_model)
+                                                                                                                      inclination=0.5, gravity_model=gravity_model)
 
     stimestep_history, smass_history, ssemimajor_axis_in_history, seccentricity_in_history, \
     ssemimajor_axis_out_history, seccentricity_out_history, sgrav_stellar, sinclination_history = generate_initial_muscea("stellar_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=30, gravity_model=gravity_model)
+                                                                                                                          inclination=0.5, gravity_model=gravity_model)
 
     gtimestep_history, gmass_history, gsemimajor_axis_in_history, geccentricity_in_history, \
     gsemimajor_axis_out_history, geccentricity_out_history, ggrav_stellar, ginclination_history = generate_initial_muscea("gravity_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=30, gravity_model=gravity_model)
+                                                                                                                          inclination=0.5, gravity_model=gravity_model)
 
     dtimestep_history, dmass_history, dsemimajor_axis_in_history, deccentricity_in_history, \
     dsemimajor_axis_out_history, deccentricity_out_history, dgrav_stellar, dinclination_history = generate_initial_muscea("diagnostic",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=30, gravity_model=gravity_model)
+                                                                                                                          inclination=0.5, gravity_model=gravity_model)
 
     plot_all_results([timestep_history, stimestep_history, gtimestep_history, dtimestep_history],
                      [eccentricity_out_history, seccentricity_out_history, geccentricity_out_history,
@@ -804,22 +755,22 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
     timestep_history, mass_history, semimajor_axis_in_history, eccentricity_in_history, \
     semimajor_axis_out_history, eccentricity_out_history, grav_stellar, inclination_history = generate_initial_muscea("interlaced",
                                                                                                                       stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                      inclination=1, gravity_model=gravity_model)
+                                                                                                                      inclination=1.5, gravity_model=gravity_model)
 
     stimestep_history, smass_history, ssemimajor_axis_in_history, seccentricity_in_history, \
     ssemimajor_axis_out_history, seccentricity_out_history, sgrav_stellar, sinclination_history = generate_initial_muscea("stellar_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=1, gravity_model=gravity_model)
+                                                                                                                          inclination=1.5, gravity_model=gravity_model)
 
     gtimestep_history, gmass_history, gsemimajor_axis_in_history, geccentricity_in_history, \
     gsemimajor_axis_out_history, geccentricity_out_history, ggrav_stellar, ginclination_history = generate_initial_muscea("gravity_first",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=1, gravity_model=gravity_model)
+                                                                                                                          inclination=1.5, gravity_model=gravity_model)
 
     dtimestep_history, dmass_history, dsemimajor_axis_in_history, deccentricity_in_history, \
     dsemimajor_axis_out_history, deccentricity_out_history, dgrav_stellar, dinclination_history = generate_initial_muscea("diagnostic",
                                                                                                                           stellar_mass_loss_fraction=stellar_mass_loss_fraction,
-                                                                                                                          inclination=1, gravity_model=gravity_model)
+                                                                                                                          inclination=1.5, gravity_model=gravity_model)
 
     plot_all_results([timestep_history, stimestep_history, gtimestep_history, dtimestep_history],
                      [eccentricity_out_history, seccentricity_out_history, geccentricity_out_history,
@@ -837,7 +788,12 @@ def run_simulation(gravity_model=Huayno, stellar_mass_loss_fraction=0.001):
     return grav_stellar.elapsed_total_time, grav_stellar.elapsed_sim_time
 
 def get_timestep_walltime_differences(gravity_model):
-    timesteps = np.linspace(0.1, 0.0000001, 25)
+    """
+
+    :param gravity_model:
+    :return:
+    """
+    timesteps = np.linspace(0.001, 0.0000001, 25)
     wall_times = []
     sim_times = []
     amuse_times = []
@@ -871,7 +827,7 @@ def get_timestep_walltime_differences(gravity_model):
 
 if __name__ in ('__main__', '__plot__'):
     gravity_model = Huayno
-    do_timestep = True
+    do_timestep = False
     if do_timestep:
         get_timestep_walltime_differences(gravity_model)
 
