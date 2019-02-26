@@ -11,18 +11,19 @@ We experimented with dynamical timesteps based off a maximum stellar mass loss o
 Our plot for Timestep vs Walltime shows that the larger the timestep the longer it takes to run, but the amount of time spent in the simulation code vs the AMUSE framework is vastly different based on which gravity code was used and the timestep chosen. For the SmallN code, very little time was spent in the simulation code, instead much more time was spent in the framework once the stellar mass fraction dropped below around 0.0001, while for the Huayno code, the amount of time spent in AMUSE did not suprass the amount of time spent in the simulation code until the stellar mass fraction of less than 0.00002, around an order of magnitude smaller than for the SmallN code.
 
 Huayno
-Simpletic 
+This simulator is simpletic, meaning that it conserves area.
 Assignment_two/Interesting.
 
 
 Hermite
-Non-simpletic
+This simulator is non-simpletic, meaning area is not convserved.
 Looking at the ALL_eccentricity vs time at 60 inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the plots it is clear that across all time steps 1 inclination is not stable. 
 
 You can find the plots discussed here in the Assignment_two/Interesting. 
 
 SmallN
 Time reversible
+FIXME: MENTION THAT THIS IS THE FASTEST ONE AND PUT THE REFERENCE TO THE PLOT WE MADE?
 
 From our test we determined that the interlaced temporal discretization method is the best method. Is also the fastest gravity simulator
 Assignment_two/Interesting.
