@@ -26,6 +26,7 @@ assignment_two/Interesting_Plots.
 Because of time constraints, we were not able to run all the codes or all the methods for very long times (> 1200 years) for most of them, but we do have two plots from running Huayno up to a time of 350000 years with a mass loss fraction of 0.001 and inclination of 0.573.
 As can be sen in the plots "eccentricity_vs_time_dts=0.00100000_inc=0.573_grav=huayno_method=interlaced.png" and "semimajor_axis_vs_time_dts=0.00100000_inc=0.573_grav=huayno_method=interlaced.png", the code seems to be stable until near the end of the simulation. For both the eccentricity and the semimajor axis, massive changes occur near the end of the simulation,
 as seemingly the error adds up during the large timesteps, as during that simulation, there were a total of 11 timesteps, averaging 31818 years each.
+From  ALL_inclination_vs_time_inc=0.573_dts=0.00000100_grav=huayno_method=all, ALL_inclination_vs_time_inc=57.296_dts=0.00000100_grav=huayno_method=all, and ALL_inclination_vs_time_inc=0.573_dts=0.00000100_grav=huayno_method=all it is clear the the small the initial starting angle for inclination the more it changes over time with the general trend decreasing an almost negligible amount but if we ran the code for longer then 1000 years then we may see more of an effect on the inclination. There is a similar trend for inclination using the Hermite simulator as well. 
 
 Hermite
 This simulator is non-simpletic, meaning area is not convserved.
