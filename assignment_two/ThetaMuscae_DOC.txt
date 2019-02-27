@@ -1,4 +1,10 @@
-Theta Muscae is a triple star with the masses of WR48: 60, O6: 40, and O9.5III: 20 solar masses at for the purposes of the simulation we age them to 4 Gyr where there masses are 40, 29, 20 solar masses respectively. From the literature we got that the period of the orbit of Wr48 and the O6 star is 19 days and that together with the O9.5III completes one orbit every five years. 
+Theta Muscae is a triple star with the masses of WR48: 60, O6: 40, and O9.5B0Iab: 20 solar masses. 
+
+For the purposes of the simulation we age them to 4 Myr where their masses are 40, 29, 20 solar masses 
+respectively. From the literature we found that the period of the orbit of the inner binary (WR48 and 
+the O6 star) is 19 days and that the period of the outer binary (inner binary and the O9.5B0Iab star) 
+completes one orbit every five years. 
+
 
 In order to accurately simulate a three-body star system you need to take in to account stellar evolution in addition to the gravitational simulator. Our task was to figure out what is the best method to integrate the stellar evolution and the gravity simulation. In order to accomplish this, we compare three integrator methods, three gravity solvers (Huayno, Hermite, and SmallN) across many different timesteps.
 Temporal discretization involves integration of every term in differential equations over time step. The organization of this code is as follows: Each of the Hermite/, Huayno/, and SmallN/ folders holds all the plot outputs from running the current code for those gravity methods. Inside those is an ALL folder which contains all the plots that compare the various methods. Interesting_Plots holds plots that the group found
