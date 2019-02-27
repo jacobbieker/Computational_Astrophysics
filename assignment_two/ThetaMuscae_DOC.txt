@@ -23,14 +23,12 @@ as seemingly the error adds up during the large timesteps, as during that simula
 
 Hermite
 This simulator is non-simpletic, meaning area is not convserved.
-Looking at the ALL_eccentricity vs time at ~60 degrees inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
+Looking at the ALL_eccentricity vs time at ~60 degrees inclination, you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first follow the same trend of decreasing in time with negiable osscilations. are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
 There are no major differences ALL_semimajor vs time for all the time steps plots between Huayno and Hermite simulation results other then minor difference that can be seen in the diagnostic (which have not stellar evoltion)plots that show different trends which may mean that the gravity simulations' differences in turn be what causes slight differences in the trends of the other integration methods where stellar evolution does play a role.
 
 You can find the plots discussed here in the assignment_two/Interesting_Plots.
 
 SmallN
-Time reversible
-
 The SmallN code is very fast, by far the fastest of any of the gravity codes used in this project. This partly seems to come from SmallN being well suited for N-body tasks with N < 10, so for this system it is well suited. It is a fully time reversible code and so should conserve all relevant quantities.
 From the walltime vs timestep plots made, comparing the ones whose filenames include grav=smalln vs those that have grav=huayno, the SmallN code is an order of magnitude or larger faster than the Huayno code and most likely Hermite code as well, since both of those codes seem to run on similar timescales.
 Our results for the evolution of the semimajor axis in time using the SmallN simulator were different then Huayno and Hermite. Looking at the ALL_semimajor vs time plot for ~30 degrees inclination the inner orbit using the interlaced method shrinks over time unlike the results with the Huayno and Hermite methods where the semimajor axis grows over time. This plot also shows that using the SmallN simulator this is a big difference in results depending on if the Stellar evolution started first or gravity was called first. 
@@ -43,6 +41,6 @@ The interlaced method allows for the changes from either of the simulations to a
 Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
 
 The optimum time step depends on the mass-loss rate of the star with the strongest wind because that is the star that is the most active.
-The optimum time step depends on the initial relative inclination
+The optimum time step depends on the initial relative inclination because that greatly effect the stability of the orbit.
 Average wall clock time does change for lower initial inclination 
 
