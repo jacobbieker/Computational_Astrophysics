@@ -17,7 +17,6 @@ from amuse.community.hermite0.interface import Hermite
 from amuse.community.seba.interface import SeBa
 from amuse.community.sse.interface import SSE
 
-
 import time as t
 
 
@@ -113,6 +112,7 @@ class GravitationalStellar(object):
         total_particle_mass = self.particles.mass.sum()
 
         semimajor_axis_in, eccentricity_in, semimajor_axis_out, eccentricity_out = self.get_orbital_elements_of_triple()
+        self.inclination, mutual_inclination = self.get_inclination()
         # Set the first original values
         self.timestep_history.append(time.value_in(units.Myr))
         self.semimajor_axis_in_history.append(semimajor_axis_in / self.semimajor_axis_init)
