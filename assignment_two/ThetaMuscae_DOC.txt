@@ -12,7 +12,7 @@ Our plot for Timestep vs Walltime shows that the larger the timestep the longer 
 
 Huayno
 This simulator is simpletic, meaning that it conserves area.
-Assignment_two/Interesting.
+assignment_two/Interesting_Plots.
 
 
 Hermite
@@ -20,16 +20,18 @@ This simulator is non-simpletic, meaning area is not convserved.
 Looking at the ALL_eccentricity vs time at ~60 degrees inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
 There are no major differences ALL_semimajor vs time for all the time steps plots between Huayno and Hermite simulation results other then minor difference that can be seen in the diagnostic (which have not stellar evoltion)plots that show different trends which may mean that the gravity simulations' differences in turn be what causes slight differences in the trends of the other integration methods where stellar evolution does play a role.
 
-You can find the plots discussed here in the Assignment_two/Interesting. 
+You can find the plots discussed here in the assignment_two/Interesting_Plots.
 
 SmallN
 Time reversible
-FIXME: WHAT DOES TIME REVERSIBLE MEAN
-FIXME: MENTION THAT THIS IS THE FASTEST ONE AND PUT THE REFERENCE TO THE PLOT WE MADE?
-You can find the plots discussed here in the Assignment_two/Interesting. 
 
-From our test we determined that the interlaced temporal discretization method is the best method. 
-FIXME: DID WE MAKE A PLOT THAT SHOWEDD THAT THE INTERLACED WAS THE FASTEST I THOUGHT WE DID The interlaced is also the fastest gravity simulator as #### plot shows.
+The SmallN code is very fast, by far the fastest of any of the gravity codes used in this project. This partly seems to come from SmallN being well suited for N-body tasks with N < 10, so for this system it is well suited. It is a fully time reversible code and so should conserve all relevant quantities.
+From the walltime vs timestep plots made, comparing the ones whose filenames include grav=smalln vs those that have grav=huayno, the SmallN code is an order of magnitude or larger faster than the Huayno code and most likely Hermite code as well, since both of those codes seem to run on similar timescales.
+
+You can find the plots discussed here in the assignment_two/Interesting_Plots.
+
+From our test we determined that the interlaced temporal discretization method is the best method. In this case, its output was between the gravity first method and stellar first method, leading us to believe that it is probably more accurate than doing one full time step of the stellar or gravity simulation and then one timestep of the other.
+The interlaced method allows for the changes from either of the simulations to affect the other one because both the stellar and gravity simulations obtain updated information from the other during the interlaced timestep.
 
 
 Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
