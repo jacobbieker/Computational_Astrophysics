@@ -19,8 +19,8 @@ Our plot for Timestep vs Walltime shows that the larger the timestep the longer 
 In our tests, the convergence seemed to be somewhere between 0.000005 and 0.000001, although we ran out of time to investigate this more. Convergence at either of those would mean that more time is spent in the AMUSE framework than the simulation code. For a stellar mass fraction of 0.000005, the timestep is close to that of the turning point in the walltime vs timestep graph where the time in AMUSE is much larger than the time in the simulation for the Huayno code, for both of these, the time spent in AMUSE is much larger than the time in the SmallN simulation for that choice.
 
 Huayno
-This simulator is simpletic, meaning that it conserves area.
-assignment_two/Interesting_Plots.
+This simulator is simpletic, meaning that it conserves area. All plots produced using the Huayno integrator have "grav=huayno" in their file name.
+
 
 
 Because of time constraints, we were not able to run all the codes or all the methods for very long times (> 1200 years) for most of them, but we do have two plots from running Huayno up to a time of 350000 years with a mass loss fraction of 0.001 and inclination of 0.573.
@@ -29,14 +29,14 @@ as seemingly the error adds up during the large timesteps, as during that simula
 From  ALL_inclination_vs_time_inc=0.573_dts=0.00000100_grav=huayno_method=all, ALL_inclination_vs_time_inc=57.296_dts=0.00000100_grav=huayno_method=all, and ALL_inclination_vs_time_inc=0.573_dts=0.00000100_grav=huayno_method=all it is clear the the small the initial starting angle for inclination the more it changes over time with the general trend decreasing an almost negligible amount but if we ran the code for longer then 1000 years then we may see more of an effect on the inclination. There is a similar trend for inclination using the Hermite simulator as well. 
 
 Hermite
-This simulator is non-simpletic, meaning area is not convserved.
+This simulator is non-simpletic, meaning area is not convserved. All plots produced using the Hermite integrator have "grav=hermite" in their file name.
 Looking at the ALL_eccentricity vs time at ~60 degrees inclination, you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first follow the same trend of decreasing in time with negiable osscilations. are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
 There are no major differences ALL_semimajor vs time for all the time steps plots between Huayno and Hermite simulation results other then minor difference that can be seen in the diagnostic (which have not stellar evoltion)plots that show different trends which may mean that the gravity simulations' differences in turn be what causes slight differences in the trends of the other integration methods where stellar evolution does play a role.
 
 You can find the plots discussed here in the assignment_two/Interesting_Plots.
 
 SmallN
-The SmallN code is very fast, by far the fastest of any of the gravity codes used in this project. This partly seems to come from SmallN being well suited for N-body tasks with N < 10, so for this system it is well suited. It is a fully time reversible code and so should conserve all relevant quantities.
+All plots produced using the SmallN integrator have "grav=smalln" in their file name. The SmallN code is very fast, by far the fastest of any of the gravity codes used in this project. This partly seems to come from SmallN being well suited for N-body tasks with N < 10, so for this system it is well suited. It is a fully time reversible code and so should conserve all relevant quantities.
 From the walltime vs timestep plots made, comparing the ones whose filenames include grav=smalln vs those that have grav=huayno, the SmallN code is an order of magnitude or larger faster than the Huayno code and most likely Hermite code as well, since both of those codes seem to run on similar timescales.
 Our results for the evolution of the semimajor axis in time using the SmallN simulator were different then Huayno and Hermite. Looking at the ALL_semimajor vs time plot for ~30 degrees inclination the inner orbit using the interlaced method shrinks over time unlike the results with the Huayno and Hermite methods where the semimajor axis grows over time. This plot also shows that using the SmallN simulator this is a big difference in results depending on if the Stellar evolution started first or gravity was called first. 
 You can find the plots discussed here in the assignment_two/Interesting_Plots.
