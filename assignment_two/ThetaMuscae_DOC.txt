@@ -15,6 +15,10 @@ This simulator is simpletic, meaning that it conserves area.
 assignment_two/Interesting_Plots.
 
 
+Because of time constraints, we were not able to run all the codes or all the methods for very long times (> 1200 years) for most of them, but we do have two plots from running Huayno up to a time of 350000 years with a mass loss fraction of 0.001 and inclination of 0.573.
+As can be sen in the plots "eccentricity_vs_time_dts=0.00100000_inc=0.573_grav=huayno_method=interlaced.png" and "semimajor_axis_vs_time_dts=0.00100000_inc=0.573_grav=huayno_method=interlaced.png", the code seems to be stable until near the end of the simulation. For both the eccentricity and the semimajor axis, massive changes occur near the end of the simulation,
+as seemingly the error adds up during the large timesteps, as during that simulation, there were a total of 11 timesteps, averaging 31818 years each.
+
 Hermite
 This simulator is non-simpletic, meaning area is not convserved.
 Looking at the ALL_eccentricity vs time at ~60 degrees inclintaion it is you can tell that there is not much difference between the integration techniques interlaced, stellar_first, gravity_first and diagnostic are about what should be expected. From the ALL_eccetricity and ALL_semimajoraxis plots it is clear that across all time steps <= 1 degerees initial inclination is not stable.
@@ -39,3 +43,4 @@ Across all the gravity simulators we noticed that from the plots of all of the i
 The optimum time step depends on the mass-loss rate of the star with the strongest wind because that is the star that is the most active.
 The optimum time step depends on the initial relative inclination
 Average wall clock time does change for lower initial inclination 
+
