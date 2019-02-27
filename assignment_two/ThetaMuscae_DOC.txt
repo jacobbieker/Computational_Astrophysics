@@ -40,13 +40,14 @@ All plots produced using the SmallN integrator have "grav=smalln" in their file 
 From the walltime vs timestep plots made, comparing the ones whose filenames include grav=smalln vs those that have grav=huayno, the SmallN code is an order of magnitude or larger faster than the Huayno code and most likely Hermite code as well, since both of those codes seem to run on similar timescales.
 Our results for the evolution of the semimajor axis in time using the SmallN simulator were different then Huayno and Hermite. Looking at the ALL_semimajor vs time plot for ~30 degrees inclination the inner orbit using the interlaced method shrinks over time unlike the results with the Huayno and Hermite methods where the semimajor axis grows over time. This plot also shows that using the SmallN simulator this is a big difference in results depending on if the Stellar evolution started first or gravity was called first. 
 The ALL_inclination plots from this integrator look different from other integrator inclination plots. Although there are still periodic spikes, between spikes the inclination is approximately constant. Other integrators show a non constant behavior between the peaks in the ALL_inclination plots. Furthermore the amount of periodic peaks decreases with increasing timestep. This is due to the SmallN integrator "skipping" the parts where peaks appear.
+
 You can find the plots discussed here in the assignment_two/Interesting_Plots.
 
 From our test we determined that the interlaced temporal discretization method is the best method. In this case, its output was between the gravity first method and stellar first method, leading us to believe that it is probably more accurate than doing one full time step of the stellar or gravity simulation and then one timestep of the other.
 The interlaced method allows for the changes from either of the simulations to affect the other one because both the stellar and gravity simulations obtain updated information from the other during the interlaced timestep.
 
 
-Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge. In addition, the plots inclination vs time for large times 
+Across all the gravity simulators we noticed that from the plots of all of the integrations across multiple time steps (All_eccentricity_vs_time and All_semimajor) it is clear that the large time steps, > 0.001 are too big to converge.
 
 The optimum time step depends on the mass-loss rate of the star with the strongest wind because that is the star that is the most active.
 The optimum time step depends on the initial relative inclination because that greatly effect the stability of the orbit.
