@@ -23,8 +23,8 @@ class HybridGravity(object):
         self.channel_from_direct = None
         self.channel_from_tree = None
 
-        self.direct_particles = None
-        self.tree_particles = None
+        self.direct_particles = Particles()
+        self.tree_particles = Particles()
 
     def add_particles(self, particles):
         """
@@ -33,13 +33,11 @@ class HybridGravity(object):
         :return:
         """
 
-        # TODO: Given set of particles, split based on mass_cut and then add to direct or tree particle sets
         for particle in particles:
-            if particle.mass >= self.mass_cut:
-                return NotImplementedError
-
-        self.direct_particles = None
-        self.tree_particles = None
+            if particles.mass >= self.mass_cut:
+                self.direct_particles.add_particle(particle)
+            else:
+                self.tree_particles.add_particle(particle)
 
         self.add_particles_to_direct(self.direct_particles)
         self.add_particles_to_tree(self.tree_particles)
