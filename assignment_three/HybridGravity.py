@@ -104,12 +104,13 @@ class HybridGravity(object):
             sim_time += timestep_length
 
             self.combined_gravity.evolve_model(timestep_length)
+            self.channel_from_direct.copy()
+            self.channel_from_tree.copy()
 
             new_energy = self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
             self.energy_history.append(new_energy / total_initial_energy)
-            self.channel_from_direct.copy()
-            self.channel_from_tree.copy()
+
 
         self.direct_code.stop()
         self.tree_code.stop()

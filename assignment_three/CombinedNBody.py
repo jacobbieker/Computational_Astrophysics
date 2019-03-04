@@ -12,8 +12,8 @@ if __name__ in ('__main__', '__plot__'):
     print("Hi")
     particles = new_plummer_model(1000)
     mZAMS = new_powerlaw_mass_distribution(1000, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
-    particles = Particles(mass=mZAMS)
+    particles.mass = mZAMS
 
     gravity = HybridGravity()
     gravity.add_particles(particles)
-
+    gravity.evolve_model(10 | units.Myr)
