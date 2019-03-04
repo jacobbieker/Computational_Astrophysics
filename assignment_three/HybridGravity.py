@@ -5,6 +5,7 @@ from amuse.units import nbody_system
 from amuse.ext.bridge import bridge
 from amuse.units import units
 from amuse.datamodel import Particle, Particles
+from amuse.ic.salpeter import new_powerlaw_mass_distribution
 
 
 class HybridGravity(object):
@@ -32,6 +33,10 @@ class HybridGravity(object):
         :param particles:
         :return:
         """
+        #Still confused on what the book says about the orders
+        particles = new_plummer_model(1000)
+        mZAMS = new_powerlaw_mass_distribution(1000, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
+        particles = Particles(mass=mZAMS)
 
         for particle in particles:
             if particles.mass >= self.mass_cut:
