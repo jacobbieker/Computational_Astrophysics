@@ -5,6 +5,8 @@ from amuse.ext.bridge import bridge
 from amuse.units import units
 from amuse.datamodel import Particle, Particles
 from amuse.community.huayno.interface import Huayno
+from amuse.community.hermite0.interface import Hermite
+from amuse.community.smalln.interface import SmallN
 from amuse.ic.salpeter import new_powerlaw_mass_distribution
 
 import time
@@ -22,8 +24,10 @@ class HybridGravity(object):
         than the mass cut are sent to the tree_code. This is changed by flip_split to the other order.
 
 
-        :param direct_code: AMUSE Interface to a Nbody solver, such as ph4, Huayno, Hermite, or SmallN, ideally a direct Nbody solver
-        :param tree_code: AMUSE Interface to a NBody solver, such as BHTree, or others, ideally a tree-code Nbody solver
+        :param direct_code: AMUSE Interface to a Nbody solver, such as ph4, Huayno, Hermite, or SmallN, ideally a direct Nbody solver,
+        Can also be a string, in which case "ph4", "huayno", "hermite", or "smalln" are the acceptable options
+        :param tree_code: AMUSE Interface to a NBody solver, such as BHTree, or others, ideally a tree-code Nbody solver,
+        Can also be a string, in which case "bhtree" is the acceptable option
         :param mass_cut: The mass cutoff. Those particles larger than the mass cutoff are sent, by default, to the direct_code
         those below it are sent to the tree_code
         :param timestep: The timestep for the system
@@ -32,12 +36,30 @@ class HybridGravity(object):
 
         """
         if direct_code is not None:
-            self.direct_code = direct_code()
+            if isinstance(direct_code, str):
+                if direct_code.lower() == "smalln":
+                    self.direct_code = SmallN()
+                elif direct_code.lower() == "huayno":
+                    self.direct_code = Huayno()
+                elif direct_code.lower() == "hermite":
+                    self.direct_code = Hermite()
+                elif direct_code.lower() == "ph4":
+                    self.direct_code = ph4()
+                else:
+                    raise NotImplementedError
+            else:
+                self.direct_code = direct_code()
         else:
             self.direct_code = None
 
         if tree_code is not None:
-            self.tree_code = tree_code()
+            if isinstance(tree_code, str):
+                if tree_code.lower() == "bhtree":
+                    self.tree_code = BHTree()
+                else:
+                    raise NotImplementedError
+            else:
+                self.tree_code = tree_code()
         else:
             self.tree_code = None
 

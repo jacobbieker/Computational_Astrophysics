@@ -16,7 +16,7 @@ def get_args():
     """
     ap = argparse.ArgumentParser()
     ap.add_argument("-n", "--num_bodies", required=False, default=1e4, type=int, help="Number of bodies to simulate")
-    ap.add_argument("-dc", "--direct_code", required=False, default="ph4", type=str, help="Direct Code Integrator (ph4, Huayno, Hermite, etc.) or None")
+    ap.add_argument("-dc", "--direct_code", required=False, default="ph4", type=str, help="Direct Code Integrator (ph4, Huayno, Hermite, or SmallN) or None")
     ap.add_argument("-tc", '--tree_code', required=False, default='bhtree', type=str, help="Tree Code Integrator (BHTree, etc.) or None")
     ap.add_argument("-mc", '--mass_cut', required=False, default=6., type=float, help="Mass Cutoff for splitting bodies, in units MSun (default = 6.)")
     ap.add_argument("-f", "--flip_split", required=False, default=False, type=bool, help="Flip the splitting procedure, if True, all particles above mass_cut are sent to the tree code"
@@ -25,7 +25,8 @@ def get_args():
     ap.add_argument("-end", "--end_time", required=False, default=10., type=float, help="End time of simulation in Myr, defaults to 10. Myr")
     ap.add_argument("-r", "--virial_radius", required=False, default=3., type=float, help="Virial Radius in kpc, defaults to 3.")
 
-    return vars(ap.parse_args())
+    args = vars(ap.parse_args())
+    return args
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
