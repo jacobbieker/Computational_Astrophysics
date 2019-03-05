@@ -94,7 +94,7 @@ class HybridGravity(object):
         self.core_radii_history = []
         self.mass_history = []
 
-        self.elapsed_time = None
+        self.elapsed_time = 0.0
 
     def add_particles(self, particles):
         """
