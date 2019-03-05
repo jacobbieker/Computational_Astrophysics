@@ -25,16 +25,19 @@ def get_args():
     ap.add_argument("-end", "--end_time", required=False, default=10., type=float, help="End time of simulation in Myr, defaults to 10. Myr")
     ap.add_argument("-r", "--virial_radius", required=False, default=3., type=float, help="Virial Radius in kpc, defaults to 3.")
 
-    args = vars(ap.parse_args())
-    return args
+    return vars(ap.parse_args())
+
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
-    n = args['num_bodies']
-    particles = new_plummer_model(n)
-    mZAMS = new_powerlaw_mass_distribution(n, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
+    particles = new_plummer_model(args['num_bodies'])
+    mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     particles.mass = mZAMS
 
-    gravity = HybridGravity()
+    gravity = HybridGravity(direct_code=args['direct_code'],
+                            tree_code=args['tree_code'],
+                            mass_cut=args['mass_cut'] | units.MSun,
+                            timestep=args['timestep'],
+                            flip_split=args['flip_split'])
     gravity.add_particles(particles)
-    gravity.evolve_model(10 | units.Myr)
+    gravity.evolve_model(args['end_time'] | units.Myr)
