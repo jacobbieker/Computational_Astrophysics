@@ -20,6 +20,9 @@ class HybridGravity(object):
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
         with the particles split into two different populations by the mass cut.
 
+        While not a complete copy of the interfaces for other GravitationalDynamics codes, it is designed to be similar,
+        with the important parts being only needing to call add_particles and evolve_model to run the simulation.
+
         By default, all particles larger than the mass cut are sent to the direct_code for integration, and all those less
         than the mass cut are sent to the tree_code. This is changed by flip_split to the other order.
 
@@ -99,8 +102,7 @@ class HybridGravity(object):
     def add_particles(self, particles):
         """
         Adds particles, splitting them up based on the mass_cut set
-        :param particles:
-        :return:
+        :param particles: The Particles() object containing the particles to add
         """
 
         if self.direct_code is None:
@@ -133,7 +135,7 @@ class HybridGravity(object):
     def get_total_energy(self):
         """
         Returns the combined energy of the tree and direct code
-        :return:
+        :return: Returns the total energy of the system
         """
         if self.direct_code is None:
             return self.tree_code.get_total_energy()
@@ -145,14 +147,14 @@ class HybridGravity(object):
     def get_total_radii(self):
         """
         Returns the total radii for both direct and tree
-        :return:
+        :return: Returns the total radii of the system
         """
         return self.direct_code.get_total_radius(), self.tree_code.get_total_radius()
 
     def get_total_mass(self):
         """
         Returns the total mass of the system
-        :return:
+        :return: The total mass of the system
         """
 
         if self.direct_code is None:
@@ -164,11 +166,12 @@ class HybridGravity(object):
 
     def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
         """
-        Evolves the system until the end time
+        Evolves the system until the end time, saving out information at set time intervals
 
-        :param end_tme:
-        :param number_of_steps:
-        :return:
+        :param end_tme: The end time of the simulation, with AMUSE units
+        :param number_of_steps: Number of steps to run for
+        :return: Timestep history, mass history, energy history, half-mass history, and core-radii history
+        all relative to the initial conditions
         """
 
         start_time = time.time()
@@ -212,8 +215,7 @@ class HybridGravity(object):
     def add_particles_to_direct(self, particles):
         """
         Adds particles to the direct Nbody code
-        :param particles:
-        :return:
+        :param particles: A Particles() object containing the particles to add
         """
         self.direct_code.add_particles(particles)
         self.channel_from_direct = self.direct_code.particles.new_channel_to(particles)
@@ -222,8 +224,7 @@ class HybridGravity(object):
     def add_particles_to_tree(self, particles):
         """
         Adds particles to the tree NBody code
-        :param particles:
-        :return:
+        :param particles: A Particles() object containing the particles to add
         """
         self.tree_code.add_particles(particles)
         self.channel_from_tree = self.tree_code.particles.new_channel_to(particles)
