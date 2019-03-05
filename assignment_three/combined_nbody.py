@@ -8,10 +8,12 @@ from amuse.units import units
 from .HybridGravity import HybridGravity
 
 
+
 if __name__ in ('__main__', '__plot__'):
-    print("Hi")
-    particles = new_plummer_model(1000)
-    mZAMS = new_powerlaw_mass_distribution(1000, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
+    # TODO Add parsing arguments here
+    n = 1e4
+    particles = new_plummer_model(n)
+    mZAMS = new_powerlaw_mass_distribution(n, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     particles.mass = mZAMS
 
     gravity = HybridGravity()

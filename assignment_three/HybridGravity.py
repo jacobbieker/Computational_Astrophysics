@@ -12,16 +12,34 @@ import time
 
 class HybridGravity(object):
 
-    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01):
-        self.direct_code = direct_code()
-        self.tree_code = tree_code()
+    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01, flip_split=False):
+
+        if direct_code is not None:
+            self.direct_code = direct_code()
+        else:
+            self.direct_code = None
+
+        if tree_code is not None:
+            self.tree_code = tree_code()
+        else:
+            self.tree_code = None
+
         self.mass_cut = mass_cut
 
-        self.combined_gravity = bridge()
-        self.combined_gravity.timestep = timestep
+        self.flip_split = flip_split
+        # Whether to flip the split so that particles more massive than mass_cut go to the tree code instead of direct
+        if self.tree_code is None:
+            self.combined_gravity = self.direct_code
+        elif self.direct_code is None:
+            self.combined_gravity = self.tree_code
+        else:
+            # So use both gravities
+            # Create the bridge for the two gravities
+            self.combined_gravity = bridge()
+            self.combined_gravity.timestep = timestep
 
-        self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
-        self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
+            self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
+            self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
 
         self.channel_from_direct = None
         self.channel_from_particles_to_direct = None
@@ -45,22 +63,45 @@ class HybridGravity(object):
         :param particles:
         :return:
         """
-        for particle in particles:
-            if particles.mass >= self.mass_cut:
-                self.direct_particles.add_particle(particle)
-            else:
-                self.tree_particles.add_particle(particle)
 
-        self.add_particles_to_direct(self.direct_particles)
-        self.add_particles_to_tree(self.tree_particles)
+        if self.direct_code is None:
+            self.tree_particles.add_particles(particles)
+
+        elif self.tree_code is None:
+            self.direct_particles.add_particles(particles)
+        else:
+            # Need to split based on the mass cut
+            for particle in particles:
+                if particles.mass >= self.mass_cut:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
+
+        if self.direct_code is None:
+            self.add_particles_to_tree(self.tree_particles)
+        elif self.tree_code is None:
+            self.add_particles_to_direct(self.direct_particles)
+        else:
+            self.add_particles_to_direct(self.direct_particles)
+            self.add_particles_to_tree(self.tree_particles)
 
     def get_total_energy(self):
         """
         Returns the combined energy of the tree and direct code
         :return:
         """
-
-        return self.direct_code.get_total_energy() + self.tree_code.get_total_energy()
+        if self.direct_code is None:
+            return self.tree_code.get_total_energy()
+        elif self.tree_code is None:
+            return self.direct_code.get_total_energy()
+        else:
+            return self.direct_code.get_total_energy() + self.tree_code.get_total_energy()
 
     def get_total_radii(self):
         """
@@ -75,7 +116,12 @@ class HybridGravity(object):
         :return:
         """
 
-        return self.direct_code.get_total_mass() + self.tree_code.get_total_mass()
+        if self.direct_code is None:
+            return self.tree_code.get_total_mass()
+        elif self.tree_code is None:
+            return self.direct_code.get_total_mass()
+        else:
+            return self.direct_code.get_total_mass() + self.tree_code.get_total_mass()
 
     def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
         """
@@ -104,16 +150,19 @@ class HybridGravity(object):
             sim_time += timestep_length
 
             self.combined_gravity.evolve_model(timestep_length)
-            self.channel_from_direct.copy()
-            self.channel_from_tree.copy()
+            if self.channel_from_direct is not None:
+                self.channel_from_direct.copy()
+            if self.channel_from_tree is not None:
+                self.channel_from_tree.copy()
 
-            new_energy = self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
+            new_energy = self.combined_gravity.potential_energy() + self.combined_gravity.kinetic_energy()
 
             self.energy_history.append(new_energy / total_initial_energy)
 
-
-        self.direct_code.stop()
-        self.tree_code.stop()
+        if self.direct_code is not None:
+            self.direct_code.stop()
+        if self.tree_code is not None:
+            self.tree_code.stop()
 
         end_time = time.time()
 
