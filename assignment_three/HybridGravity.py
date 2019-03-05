@@ -13,7 +13,24 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01, flip_split=False):
+        """
+        This is the initialization for the HybridGravity solver. For the most flexiblity, as well as to allow this one
+        class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
+        with the particles split into two different populations by the mass cut.
 
+        By default, all particles larger than the mass cut are sent to the direct_code for integration, and all those less
+        than the mass cut are sent to the tree_code. This is changed by flip_split to the other order.
+
+
+        :param direct_code: AMUSE Interface to a Nbody solver, such as ph4, Huayno, Hermite, or SmallN, ideally a direct Nbody solver
+        :param tree_code: AMUSE Interface to a NBody solver, such as BHTree, or others, ideally a tree-code Nbody solver
+        :param mass_cut: The mass cutoff. Those particles larger than the mass cutoff are sent, by default, to the direct_code
+        those below it are sent to the tree_code
+        :param timestep: The timestep for the system
+        :param flip_split: Whether to flip how the split works, so that the stars more massive than the mass cutoff are sent to
+        the tree_code instead of the direct_code. Defaults to False.
+
+        """
         if direct_code is not None:
             self.direct_code = direct_code()
         else:
