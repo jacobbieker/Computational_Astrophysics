@@ -1,14 +1,14 @@
-from amuse.community.ph4.interface import ph4
-from amuse.community.bhtree.interface import BHTree
 from amuse.ext.bridge import bridge
 from amuse.units import units
 from amuse.datamodel import Particles
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
 from amuse.community.smalln.interface import SmallN
+from amuse.community.ph4.interface import ph4
+from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
-from amuse.ext.LagrangianRadii import LagrangianRadii
+#from amuse.ext.LagrangianRadii import LagrangianRadii
 
 from amuse.community.mi6.interface import MI6
 
@@ -33,7 +33,7 @@ class HybridGravity(object):
         :param direct_code: AMUSE Interface to a Nbody solver, such as ph4, Huayno, Hermite, or SmallN, ideally a direct Nbody solver,
         Can also be a string, in which case "ph4", "huayno", "hermite", or "smalln" are the acceptable options
         :param tree_code: AMUSE Interface to a NBody solver, such as BHTree, or others, ideally a tree-code Nbody solver,
-        Can also be a string, in which case "bhtree" is the acceptable option
+        Can also be a string, in which case "bhtree", "octgrav", and "bonsai" are the acceptable options
         :param mass_cut: The mass cutoff. Those particles larger than the mass cutoff are sent, by default, to the direct_code
         those below it are sent to the tree_code
         :param timestep: The timestep for the system
@@ -66,6 +66,10 @@ class HybridGravity(object):
             if isinstance(tree_code, str):
                 if tree_code.lower() == "bhtree":
                     self.tree_code = BHTree(self.converter)
+                elif tree_code.lower() == "bonsai":
+                    self.tree_code = Bonsai(self.converter)
+                elif tree_code.lower() == "octgrav":
+                    self.tree_code = Octgrav(self.converter)
                 else:
                     raise NotImplementedError
             else:
@@ -126,8 +130,9 @@ class HybridGravity(object):
         Returns the half-mass distance for the system
         :return:
         """
-        half_mass = LagrangianRadii(self.combined_gravity.particles, massf=[0.5] | units.none)
-        return half_mass[0].number
+        #half_mass = LagrangianRadii(self.combined_gravity.particles, massf=[0.5] | units.none)
+        total_radius = self.combined_gravity.particles.LagrangianRadii(mf=[0.5], cm=self.combined_gravity.particles.center_of_mass(), unit_converter=self.converter)[0][0]
+        return total_radius
 
     def add_particles(self, particles):
         """
@@ -211,14 +216,15 @@ class HybridGravity(object):
         sim_time = 0.0 | end_time.unit
 
         total_initial_energy = self.get_total_energy()
-        total_previous_energy = total_initial_energy
-
         total_particle_mass = self.get_total_mass()
+        initial_core_radii = self.get_core_radius()
+        initial_half_mass = self.get_half_mass()
 
         self.timestep_history.append(sim_time.value_in(units.Myr))
         self.mass_history.append(self.get_total_mass() / self.get_total_mass())
         self.energy_history.append(self.get_total_energy() / self.get_total_energy())
-        # TODO Add the core radii and half-mass here
+        self.half_mass_history.append(self.get_half_mass()/self.get_half_mass())
+        self.core_radii_history.append(self.get_core_radius()/self.get_core_radius())
 
         while sim_time < end_time:
             sim_time += timestep_length | end_time.unit
@@ -232,6 +238,10 @@ class HybridGravity(object):
             new_energy = self.combined_gravity.potential_energy() + self.combined_gravity.kinetic_energy()
 
             self.energy_history.append(new_energy / total_initial_energy)
+            self.half_mass_history.append(self.get_half_mass()/initial_half_mass)
+            self.core_radii_history.append(self.get_core_radius()/initial_core_radii)
+            self.mass_history.append(self.get_total_mass()/total_particle_mass)
+            self.timestep_history.append(sim_time.value_in(units.Myr))
 
         if self.direct_code is not None:
             self.direct_code.stop()
