@@ -214,7 +214,7 @@ class HybridGravity(object):
         while sim_time < end_time:
             sim_time += timestep_length
 
-            self.combined_gravity.evolve_model(timestep_length)
+            self.combined_gravity.evolve_model(sim_time)
             if self.channel_from_direct is not None:
                 self.channel_from_direct.copy()
             if self.channel_from_tree is not None:
