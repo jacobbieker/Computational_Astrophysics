@@ -175,19 +175,8 @@ class HybridGravity(object):
         Returns the combined energy of the tree and direct code
         :return: Returns the total energy of the system
         """
-        if self.direct_code is None:
-            return self.tree_code.get_total_energy()
-        elif self.tree_code is None:
-            return self.direct_code.get_total_energy()
-        else:
-            return self.direct_code.get_total_energy() + self.tree_code.get_total_energy()
 
-    def get_total_radii(self):
-        """
-        Returns the total radii for both direct and tree
-        :return: Returns the total radii of the system
-        """
-        return self.direct_code.get_total_radius(), self.tree_code.get_total_radius()
+        return self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
     def get_total_mass(self):
         """
@@ -195,12 +184,7 @@ class HybridGravity(object):
         :return: The total mass of the system
         """
 
-        if self.direct_code is None:
-            return self.tree_code.get_total_mass()
-        elif self.tree_code is None:
-            return self.direct_code.get_total_mass()
-        else:
-            return self.direct_code.get_total_mass() + self.tree_code.get_total_mass()
+        return self.combined_gravity.particles.mass.sum()
 
     def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
         """
@@ -228,7 +212,7 @@ class HybridGravity(object):
         self.core_radii_history.append(self.get_core_radius() / self.get_core_radius())
 
         while sim_time < end_time:
-            sim_time += timestep_length | end_time.unit
+            sim_time += timestep_length
 
             self.combined_gravity.evolve_model(timestep_length)
             if self.channel_from_direct is not None:

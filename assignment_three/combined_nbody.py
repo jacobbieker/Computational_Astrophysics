@@ -10,6 +10,8 @@ from amuse.community.huayno.interface import Huayno
 import amuse.datamodel.particle_attributes
 import argparse
 
+import matplotlib.pyplot as plt
+
 def get_args():
     """
     Obtains and returns a dictionary of the command line arguments for this program
@@ -50,4 +52,15 @@ if __name__ in ('__main__', '__plot__'):
                             flip_split=args['flip_split'],
                             convert_nbody=converter)
     gravity.add_particles(particles)
-    gravity.evolve_model(args['end_time'] | units.Myr)
+    timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
+
+    plt.plot(timestep_history, mass_history, label="Mass")
+    plt.plot(timestep_history, energy_history, label="Energy")
+    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
+    plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    plt.title("Histories")
+    plt.legend(loc='best')
+    plt.show()
+    plt.cla()
+
+
