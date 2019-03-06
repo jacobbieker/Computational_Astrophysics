@@ -8,17 +8,17 @@ from amuse.community.ph4.interface import ph4
 from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
-#from amuse.ext.LagrangianRadii import LagrangianRadii
+# from amuse.ext.LagrangianRadii import LagrangianRadii
 
 from amuse.community.mi6.interface import MI6
-
 
 import time
 
 
 class HybridGravity(object):
 
-    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01, flip_split=False, convert_nbody=None):
+    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
+                 convert_nbody=None):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -111,7 +111,7 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge()
-        self.combined_gravity.timestep = self.timestep
+        self.combined_gravity.timestep = self.timestep | units.Myr
 
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
@@ -121,17 +121,18 @@ class HybridGravity(object):
         Returns the core-radius for the system
         :return:
         """
-        _ , core_radius, _ = self.combined_gravity.particles.densitycentre_coreradius_coredens(unit_converter=self.converter)
+        _, core_radius, _ = self.combined_gravity.particles.densitycentre_coreradius_coredens(
+            unit_converter=self.converter)
         return core_radius
-
 
     def get_half_mass(self):
         """
         Returns the half-mass distance for the system
         :return:
         """
-        #half_mass = LagrangianRadii(self.combined_gravity.particles, massf=[0.5] | units.none)
-        total_radius = self.combined_gravity.particles.LagrangianRadii(mf=[0.5], cm=self.combined_gravity.particles.center_of_mass(), unit_converter=self.converter)[0][0]
+        total_radius = \
+        self.combined_gravity.particles.LagrangianRadii(mf=[0.5], cm=self.combined_gravity.particles.center_of_mass(),
+                                                        unit_converter=self.converter)[0][0]
         return total_radius
 
     def add_particles(self, particles):
@@ -201,7 +202,7 @@ class HybridGravity(object):
         else:
             return self.direct_code.get_total_mass() + self.tree_code.get_total_mass()
 
-    def evolve_model(self, end_time, timestep_length=0.1):
+    def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
         """
         Evolves the system until the end time, saving out information at set time intervals
 
@@ -223,8 +224,8 @@ class HybridGravity(object):
         self.timestep_history.append(sim_time.value_in(units.Myr))
         self.mass_history.append(self.get_total_mass() / self.get_total_mass())
         self.energy_history.append(self.get_total_energy() / self.get_total_energy())
-        self.half_mass_history.append(self.get_half_mass()/self.get_half_mass())
-        self.core_radii_history.append(self.get_core_radius()/self.get_core_radius())
+        self.half_mass_history.append(self.get_half_mass() / self.get_half_mass())
+        self.core_radii_history.append(self.get_core_radius() / self.get_core_radius())
 
         while sim_time < end_time:
             sim_time += timestep_length | end_time.unit
@@ -235,12 +236,12 @@ class HybridGravity(object):
             if self.channel_from_tree is not None:
                 self.channel_from_tree.copy()
 
-            new_energy = self.combined_gravity.potential_energy() + self.combined_gravity.kinetic_energy()
+            new_energy = self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
             self.energy_history.append(new_energy / total_initial_energy)
-            self.half_mass_history.append(self.get_half_mass()/initial_half_mass)
-            self.core_radii_history.append(self.get_core_radius()/initial_core_radii)
-            self.mass_history.append(self.get_total_mass()/total_particle_mass)
+            self.half_mass_history.append(self.get_half_mass() / initial_half_mass)
+            self.core_radii_history.append(self.get_core_radius() / initial_core_radii)
+            self.mass_history.append(self.get_total_mass() / total_particle_mass)
             self.timestep_history.append(sim_time.value_in(units.Myr))
 
         if self.direct_code is not None:
