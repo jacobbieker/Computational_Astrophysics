@@ -36,14 +36,15 @@ def get_args():
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
+    mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     if args['use_converter']:
-        converter = nbody_system.nbody_to_si(1|units.MSun, 1|units.kpc)
+        converter = nbody_system.nbody_to_si(mZAMS.sum(), args['virial_radius'] |units.parsec)
     else:
         converter = None
 
     particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
-    mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     particles.mass = mZAMS
+    # set_standard scale to rescale it
 
     gravity = HybridGravity(direct_code=args['direct_code'],
                             tree_code=args['tree_code'],
@@ -53,6 +54,8 @@ if __name__ in ('__main__', '__plot__'):
                             convert_nbody=converter)
     gravity.add_particles(particles)
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
+
+    print("Timestep length: {}".format(len(timestep_history)))
 
     plt.plot(timestep_history, mass_history, label="Mass")
     plt.plot(timestep_history, energy_history, label="Energy")
