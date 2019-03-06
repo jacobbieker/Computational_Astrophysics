@@ -14,9 +14,9 @@ import time
 
 class HybridGravity(object):
 
-    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01, flip_split=False):
+    def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.01, flip_split=False, convert_nbody=None):
         """
-        This is the initialization for the HybridGravity solver. For the most flexiblity, as well as to allow this one
+        This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
         with the particles split into two different populations by the mass cut.
 
@@ -36,33 +36,35 @@ class HybridGravity(object):
         :param timestep: The timestep for the system
         :param flip_split: Whether to flip how the split works, so that the stars more massive than the mass cutoff are sent to
         the tree_code instead of the direct_code. Defaults to False.
+        :param convert_nbody: The converter to use if needed to convert the nbody units to physical units, defaults to None
 
         """
+
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":
-                    self.direct_code = SmallN()
+                    self.direct_code = SmallN(convert_nbody)
                 elif direct_code.lower() == "huayno":
-                    self.direct_code = Huayno()
+                    self.direct_code = Huayno(convert_nbody)
                 elif direct_code.lower() == "hermite":
-                    self.direct_code = Hermite()
+                    self.direct_code = Hermite(convert_nbody)
                 elif direct_code.lower() == "ph4":
-                    self.direct_code = ph4()
+                    self.direct_code = ph4(convert_nbody)
                 else:
                     raise NotImplementedError
             else:
-                self.direct_code = direct_code()
+                self.direct_code = direct_code(convert_nbody)
         else:
             self.direct_code = None
 
         if tree_code is not None:
             if isinstance(tree_code, str):
                 if tree_code.lower() == "bhtree":
-                    self.tree_code = BHTree()
+                    self.tree_code = BHTree(convert_nbody)
                 else:
                     raise NotImplementedError
             else:
-                self.tree_code = tree_code()
+                self.tree_code = tree_code(convert_nbody)
         else:
             self.tree_code = None
 
@@ -77,11 +79,11 @@ class HybridGravity(object):
         else:
             # So use both gravities
             # Create the bridge for the two gravities
-            self.combined_gravity = bridge()
-            self.combined_gravity.timestep = timestep
+            self.combined_gravity = None
+            #self.combined_gravity.timestep = timestep
 
-            self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
-            self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
+            #self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
+            #self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
 
         self.channel_from_direct = None
         self.channel_from_particles_to_direct = None
@@ -98,6 +100,16 @@ class HybridGravity(object):
         self.mass_history = []
 
         self.elapsed_time = 0.0
+        self.timestep = timestep
+
+    def _create_bridge(self):
+        # So use both gravities
+        # Create the bridge for the two gravities
+        self.combined_gravity = bridge()
+        self.combined_gravity.timestep = self.timestep
+
+        self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
+        self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
 
     def add_particles(self, particles):
         """
@@ -113,7 +125,7 @@ class HybridGravity(object):
         else:
             # Need to split based on the mass cut
             for particle in particles:
-                if particles.mass >= self.mass_cut:
+                if particle.mass >= self.mass_cut:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -131,6 +143,8 @@ class HybridGravity(object):
         else:
             self.add_particles_to_direct(self.direct_particles)
             self.add_particles_to_tree(self.tree_particles)
+            # Now create the bridge, since both codes used
+            self._create_bridge()
 
     def get_total_energy(self):
         """
@@ -164,7 +178,7 @@ class HybridGravity(object):
         else:
             return self.direct_code.get_total_mass() + self.tree_code.get_total_mass()
 
-    def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
+    def evolve_model(self, end_time, timestep_length=0.1):
         """
         Evolves the system until the end time, saving out information at set time intervals
 
@@ -189,7 +203,7 @@ class HybridGravity(object):
         # TODO Add the core radii and half-mass here
 
         while sim_time < end_time:
-            sim_time += timestep_length
+            sim_time += timestep_length | end_time.unit
 
             self.combined_gravity.evolve_model(timestep_length)
             if self.channel_from_direct is not None:
@@ -217,7 +231,7 @@ class HybridGravity(object):
         Adds particles to the direct Nbody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.direct_code.add_particles(particles)
+        self.direct_code.particles.add_particles(particles)
         self.channel_from_direct = self.direct_code.particles.new_channel_to(particles)
         self.channel_from_particles_to_direct = self.direct_particles.new_channel_to(self.direct_code.particles)
 
@@ -226,6 +240,6 @@ class HybridGravity(object):
         Adds particles to the tree NBody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.tree_code.add_particles(particles)
+        self.tree_code.particles.add_particles(particles)
         self.channel_from_tree = self.tree_code.particles.new_channel_to(particles)
         self.channel_from_particles_to_tree = self.tree_particles.new_channel_to(self.tree_code.particles)
