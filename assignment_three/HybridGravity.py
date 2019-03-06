@@ -1,13 +1,17 @@
 from amuse.community.ph4.interface import ph4
 from amuse.community.bhtree.interface import BHTree
-from amuse.units import nbody_system
 from amuse.ext.bridge import bridge
 from amuse.units import units
-from amuse.datamodel import Particle, Particles
+from amuse.datamodel import Particles
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
 from amuse.community.smalln.interface import SmallN
-from amuse.ic.salpeter import new_powerlaw_mass_distribution
+from amuse.community.octgrav.interface import Octgrav
+from amuse.community.bonsai.interface import Bonsai
+from amuse.ext.LagrangianRadii import LagrangianRadii
+
+from amuse.community.mi6.interface import MI6
+
 
 import time
 
@@ -26,7 +30,6 @@ class HybridGravity(object):
         By default, all particles larger than the mass cut are sent to the direct_code for integration, and all those less
         than the mass cut are sent to the tree_code. This is changed by flip_split to the other order.
 
-
         :param direct_code: AMUSE Interface to a Nbody solver, such as ph4, Huayno, Hermite, or SmallN, ideally a direct Nbody solver,
         Can also be a string, in which case "ph4", "huayno", "hermite", or "smalln" are the acceptable options
         :param tree_code: AMUSE Interface to a NBody solver, such as BHTree, or others, ideally a tree-code Nbody solver,
@@ -40,31 +43,33 @@ class HybridGravity(object):
 
         """
 
+        self.converter = convert_nbody
+
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":
-                    self.direct_code = SmallN(convert_nbody)
+                    self.direct_code = SmallN(self.converter)
                 elif direct_code.lower() == "huayno":
-                    self.direct_code = Huayno(convert_nbody)
+                    self.direct_code = Huayno(self.converter)
                 elif direct_code.lower() == "hermite":
-                    self.direct_code = Hermite(convert_nbody)
+                    self.direct_code = Hermite(self.converter)
                 elif direct_code.lower() == "ph4":
-                    self.direct_code = ph4(convert_nbody)
+                    self.direct_code = ph4(self.converter)
                 else:
                     raise NotImplementedError
             else:
-                self.direct_code = direct_code(convert_nbody)
+                self.direct_code = direct_code(self.converter)
         else:
             self.direct_code = None
 
         if tree_code is not None:
             if isinstance(tree_code, str):
                 if tree_code.lower() == "bhtree":
-                    self.tree_code = BHTree(convert_nbody)
+                    self.tree_code = BHTree(self.converter)
                 else:
                     raise NotImplementedError
             else:
-                self.tree_code = tree_code(convert_nbody)
+                self.tree_code = tree_code(self.converter)
         else:
             self.tree_code = None
 
@@ -80,10 +85,6 @@ class HybridGravity(object):
             # So use both gravities
             # Create the bridge for the two gravities
             self.combined_gravity = None
-            #self.combined_gravity.timestep = timestep
-
-            #self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
-            #self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
 
         self.channel_from_direct = None
         self.channel_from_particles_to_direct = None
@@ -110,6 +111,23 @@ class HybridGravity(object):
 
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
+
+    def get_core_radius(self):
+        """
+        Returns the core-radius for the system
+        :return:
+        """
+        _ , core_radius, _ = self.combined_gravity.particles.densitycentre_coreradius_coredens(unit_converter=self.converter)
+        return core_radius
+
+
+    def get_half_mass(self):
+        """
+        Returns the half-mass distance for the system
+        :return:
+        """
+        half_mass = LagrangianRadii(self.combined_gravity.particles, massf=[0.5] | units.none)
+        return half_mass[0].number
 
     def add_particles(self, particles):
         """

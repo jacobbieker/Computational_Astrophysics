@@ -7,6 +7,7 @@ from amuse.ic.salpeter import new_powerlaw_mass_distribution
 from amuse.units import units
 from HybridGravity import HybridGravity
 from amuse.community.huayno.interface import Huayno
+import amuse.datamodel.particle_attributes
 import argparse
 
 def get_args():
@@ -42,12 +43,15 @@ if __name__ in ('__main__', '__plot__'):
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     particles.mass = mZAMS
 
+    gravity = Huayno(converter)
 
-    #gravity = Huayno(converter)
+    gravity.particles.add_particles(particles)
 
-    #gravity.particles.add_particles(particles)
+    gravity.particles.densitycentre_coreradius_coredens(unit_converter=converter)
 
-
+    print(gravity.particles.densitycentre_coreradius_coredens(unit_converter=converter)
+              )
+    exit()
     gravity = HybridGravity(direct_code=args['direct_code'],
                             tree_code=args['tree_code'],
                             mass_cut=args['mass_cut'] | units.MSun,
