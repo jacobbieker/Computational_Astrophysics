@@ -30,7 +30,15 @@ def get_args():
     ap.add_argument("-r", "--virial_radius", required=False, default=3., type=float, help="Virial Radius in kpc, defaults to 3.")
     ap.add_argument("-c", "--use_converter", required=False, default=True, type=bool, help="Whether to use the converter from nbody units to physical units, with units 1 MSun, 1 kpc, defaults to True")
 
-    return vars(ap.parse_args())
+    args_dict = vars(ap.parse_args())
+
+    if args_dict['direct_code'].lower() == "none":
+        args_dict['direct_code'] = None
+
+    if args_dict['tree_code'].lower() == "none":
+        args_dict['tree_code'] = None
+
+    return args_dict
 
 
 if __name__ in ('__main__', '__plot__'):
@@ -38,12 +46,15 @@ if __name__ in ('__main__', '__plot__'):
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     if args['use_converter']:
-        converter = nbody_system.nbody_to_si(mZAMS.sum(), args['virial_radius'] |units.parsec)
+        converter = nbody_system.nbody_to_si(mZAMS.sum(), 3 |units.parsec)
     else:
         converter = None
 
+
+
     particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
     particles.mass = mZAMS
+    particles.scale_to_standard(convert_nbody=converter)
     # set_standard scale to rescale it
 
     gravity = HybridGravity(direct_code=args['direct_code'],
@@ -53,14 +64,17 @@ if __name__ in ('__main__', '__plot__'):
                             flip_split=args['flip_split'],
                             convert_nbody=converter)
     gravity.add_particles(particles)
+
+    print(gravity.get_core_radius().value_in(units.parsec))
+    exit()
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
 
     print("Timestep length: {}".format(len(timestep_history)))
 
-    plt.plot(timestep_history, mass_history, label="Mass")
+    #plt.plot(timestep_history, mass_history, label="Mass")
     plt.plot(timestep_history, energy_history, label="Energy")
-    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
-    plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    #plt.plot(timestep_history, half_mass_history, label="Half-Mass")
+    #plt.plot(timestep_history, core_radii_history, label="Core Radii")
     plt.title("Histories")
     plt.legend(loc='best')
     plt.show()

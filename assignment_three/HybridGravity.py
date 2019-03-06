@@ -111,7 +111,7 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge()
-        self.combined_gravity.timestep = self.timestep | units.Myr
+        #self.combined_gravity.timestep = self.timestep | units.Myr
 
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
@@ -222,7 +222,7 @@ class HybridGravity(object):
 
             new_energy = self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
-            self.energy_history.append(new_energy / total_initial_energy)
+            self.energy_history.append((total_initial_energy - new_energy) / total_initial_energy)
             self.half_mass_history.append(self.get_half_mass() / initial_half_mass)
             self.core_radii_history.append(self.get_core_radius() / initial_core_radii)
             self.mass_history.append(self.get_total_mass() / total_particle_mass)
