@@ -85,7 +85,7 @@ if __name__ in ('__main__', '__plot__'):
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
     plt.title("Histories: DC {} TC {}".format(args['direct_code'], args['tree_code']))
     plt.legend(loc='best')
-    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}.png".format(args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'], str(args['flip_split']), args['num_bodies']))
+    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}.png".format(args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'], str(args['flip_split']), args['num_bodies'], args['timestep']))
     plt.cla()
 
     print(max(energy_history))
