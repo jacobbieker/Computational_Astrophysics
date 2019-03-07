@@ -100,7 +100,6 @@ class HybridGravity(object):
             # Create the bridge for the two gravities
             if particles is not None:
                 self.add_particles(particles)
-                self._create_bridge()
             else:
                 self.combined_gravity = None
 
@@ -173,6 +172,7 @@ class HybridGravity(object):
             self.add_particles_to_direct(self.direct_particles)
             self.add_particles_to_tree(self.tree_particles)
             # Now create the bridge, since both codes used
+            self._create_bridge()
 
 
     def get_total_energy(self):
@@ -206,9 +206,6 @@ class HybridGravity(object):
         start_time = time.time()
 
         sim_time = 0.0 | end_time.unit
-
-        if self.combined_gravity is None:
-            self._create_bridge()
 
         total_initial_energy = self.get_total_energy()
         total_particle_mass = self.get_total_mass()

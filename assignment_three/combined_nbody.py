@@ -55,7 +55,7 @@ def get_args():
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
-    cluster_mass = 100000 | units.MSun
+    cluster_mass = 1e5 | units.MSun
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     if args['use_converter']:
         converter = nbody_system.nbody_to_si(cluster_mass, args['virial_radius'] |units.parsec)
@@ -85,59 +85,7 @@ if __name__ in ('__main__', '__plot__'):
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
     plt.title("Histories: DC {} TC {}".format(args['direct_code'], args['tree_code']))
     plt.legend(loc='best')
-    plt.savefig("BothTimestep.png")
-    plt.cla()
-
-    particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
-    particles.mass = mZAMS
-    particles.scale_to_standard(convert_nbody=converter)
-    # set_standard scale to rescale it
-
-    gravity = HybridGravity(direct_code=args['direct_code'],
-                            tree_code=None,
-                            mass_cut=args['mass_cut'] | units.MSun,
-                            timestep=args['timestep'],
-                            flip_split=args['flip_split'],
-                            convert_nbody=converter)
-    gravity.add_particles(particles)
-
-    timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
-
-    print("Timestep length: {}".format(len(timestep_history)))
-
-    plt.plot(timestep_history, mass_history, label="Mass")
-    plt.plot(timestep_history, energy_history, label="Energy")
-    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
-    plt.plot(timestep_history, core_radii_history, label="Core Radii")
-    plt.title("Histories: DC {} TC {}".format(args['direct_code'], None))
-    plt.legend(loc='best')
-    plt.savefig("NoTreeTimestep.png")
-    plt.cla()
-
-    particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
-    particles.mass = mZAMS
-    particles.scale_to_standard(convert_nbody=converter)
-    # set_standard scale to rescale it
-
-    gravity = HybridGravity(direct_code=None,
-                            tree_code=args['tree_code'],
-                            mass_cut=args['mass_cut'] | units.MSun,
-                            timestep=args['timestep'],
-                            flip_split=args['flip_split'],
-                            convert_nbody=converter)
-    gravity.add_particles(particles)
-
-    timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
-
-    print("Timestep length: {}".format(len(timestep_history)))
-
-    plt.plot(timestep_history, mass_history, label="Mass")
-    plt.plot(timestep_history, energy_history, label="Energy")
-    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
-    plt.plot(timestep_history, core_radii_history, label="Core Radii")
-    plt.title("Histories: DC {} TC {}".format(None, args['tree_code']))
-    plt.legend(loc='best')
-    plt.savefig("NoDirectTimestep.png")
+    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}.png".format(args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'], str(args['flip_split']), args['num_bodies']))
     plt.cla()
 
     print(max(energy_history))
