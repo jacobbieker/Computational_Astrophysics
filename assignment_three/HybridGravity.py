@@ -233,7 +233,7 @@ class HybridGravity(object):
         self.energy_history.append(self.get_total_energy())
 
         self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
-        self.direct_locations.append(self.combined_gravity.particles)
+        self.direct_locations.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
         while sim_time < end_time:
             sim_time += timestep_length
@@ -256,7 +256,7 @@ class HybridGravity(object):
             self.half_mass_history.append(self.get_half_mass())
             self.energy_history.append(self.get_total_energy())
             self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
-            self.direct_locations.append(self.combined_gravity.particles)
+            self.direct_locations.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
 
         if self.direct_code is not None:
