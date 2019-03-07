@@ -8,7 +8,7 @@ from amuse.community.ph4.interface import ph4
 from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
-# from amuse.ext.LagrangianRadii import LagrangianRadii
+from amuse.ext.LagrangianRadii import LagrangianRadii
 
 from amuse.community.mi6.interface import MI6
 
@@ -175,8 +175,10 @@ class HybridGravity(object):
         Returns the combined energy of the tree and direct code
         :return: Returns the total energy of the system
         """
-
-        return self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
+        if self.tree_code is not None and self.direct_code is not None:
+            return self.tree_code.potential_energy + self.tree_code.kinetic_energy + self.direct_code.kinetic_energy + self.direct_code.potential_energy
+        else:
+            return self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
     def get_total_mass(self):
         """
@@ -214,15 +216,16 @@ class HybridGravity(object):
         while sim_time < end_time:
             sim_time += timestep_length
 
-            self.combined_gravity.evolve_model(sim_time)
             if self.channel_from_direct is not None:
                 self.channel_from_direct.copy()
             if self.channel_from_tree is not None:
                 self.channel_from_tree.copy()
 
-            new_energy = self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
+            self.combined_gravity.evolve_model(sim_time)
 
-            self.energy_history.append((total_initial_energy - new_energy) / total_initial_energy)
+            new_energy = self.get_total_energy()
+
+            self.energy_history.append((new_energy) / total_initial_energy)
             self.half_mass_history.append(self.get_half_mass() / initial_half_mass)
             self.core_radii_history.append(self.get_core_radius() / initial_core_radii)
             self.mass_history.append(self.get_total_mass() / total_particle_mass)

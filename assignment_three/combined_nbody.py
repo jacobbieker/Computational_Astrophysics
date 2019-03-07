@@ -18,17 +18,28 @@ def get_args():
 
     :return: Command line arguments and their values in a dictionary
     """
+
+    def str2bool(v):
+        # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-n", "--num_bodies", required=False, default=10000, type=int, help="Number of bodies to simulate")
     ap.add_argument("-dc", "--direct_code", required=False, default="ph4", type=str, help="Direct Code Integrator (ph4, Huayno, Hermite, or SmallN) or None")
     ap.add_argument("-tc", '--tree_code', required=False, default='bhtree', type=str, help="Tree Code Integrator (BHTree, Bonsai, Octgrav etc.) or None")
     ap.add_argument("-mc", '--mass_cut', required=False, default=6., type=float, help="Mass Cutoff for splitting bodies, in units MSun (default = 6.)")
-    ap.add_argument("-f", "--flip_split", required=False, default=False, type=bool, help="Flip the splitting procedure, if True, all particles above mass_cut are sent to the tree code"
+    ap.add_argument("-f", "--flip_split", required=False, default=False, type=str2bool, help="Flip the splitting procedure, if True, all particles above mass_cut are sent to the tree code"
                                                                                          " if False (default), all particles above mass_cut are sent to the direct code")
     ap.add_argument("-t", "--timestep", required=False, default=0.1, type=float, help="Timestep to save out information in Myr, default is 0.1 Myr")
     ap.add_argument("-end", "--end_time", required=False, default=10., type=float, help="End time of simulation in Myr, defaults to 10. Myr")
     ap.add_argument("-r", "--virial_radius", required=False, default=3., type=float, help="Virial Radius in kpc, defaults to 3.")
-    ap.add_argument("-c", "--use_converter", required=False, default=True, type=bool, help="Whether to use the converter from nbody units to physical units, with units 1 MSun, 1 kpc, defaults to True")
+    ap.add_argument("-c", "--use_converter", required=False, default=True, type=str2bool, help="Whether to use the converter from nbody units to physical units, with units 1 MSun, 1 kpc, defaults to True")
 
     args_dict = vars(ap.parse_args())
 
@@ -46,11 +57,9 @@ if __name__ in ('__main__', '__plot__'):
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     if args['use_converter']:
-        converter = nbody_system.nbody_to_si(mZAMS.sum(), 3 |units.parsec)
+        converter = nbody_system.nbody_to_si(mZAMS.sum(), args['virial_radius'] |units.parsec)
     else:
         converter = None
-
-
 
     particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
     particles.mass = mZAMS
@@ -65,8 +74,6 @@ if __name__ in ('__main__', '__plot__'):
                             convert_nbody=converter)
     gravity.add_particles(particles)
 
-    print(gravity.get_core_radius().value_in(units.parsec))
-    exit()
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
 
     print("Timestep length: {}".format(len(timestep_history)))
