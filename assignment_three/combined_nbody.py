@@ -55,9 +55,10 @@ def get_args():
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
+    cluster_mass = 100000 | units.MSun
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
     if args['use_converter']:
-        converter = nbody_system.nbody_to_si(mZAMS.sum(), args['virial_radius'] |units.parsec)
+        converter = nbody_system.nbody_to_si(cluster_mass, args['virial_radius'] |units.parsec)
     else:
         converter = None
 
@@ -78,13 +79,16 @@ if __name__ in ('__main__', '__plot__'):
 
     print("Timestep length: {}".format(len(timestep_history)))
 
-    #plt.plot(timestep_history, mass_history, label="Mass")
+    plt.plot(timestep_history, mass_history, label="Mass")
     plt.plot(timestep_history, energy_history, label="Energy")
-    #plt.plot(timestep_history, half_mass_history, label="Half-Mass")
-    #plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
+    plt.plot(timestep_history, core_radii_history, label="Core Radii")
     plt.title("Histories")
     plt.legend(loc='best')
     plt.show()
     plt.cla()
+
+    print(max(energy_history))
+    print(min(energy_history))
 
 

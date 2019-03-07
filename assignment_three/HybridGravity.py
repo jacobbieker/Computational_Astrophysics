@@ -18,7 +18,7 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None):
+                 convert_nbody=None, particles=None):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -80,15 +80,6 @@ class HybridGravity(object):
         self.mass_cut = mass_cut
 
         self.flip_split = flip_split
-        # Whether to flip the split so that particles more massive than mass_cut go to the tree code instead of direct
-        if self.tree_code is None:
-            self.combined_gravity = self.direct_code
-        elif self.direct_code is None:
-            self.combined_gravity = self.tree_code
-        else:
-            # So use both gravities
-            # Create the bridge for the two gravities
-            self.combined_gravity = None
 
         self.channel_from_direct = None
         self.channel_from_particles_to_direct = None
@@ -97,6 +88,21 @@ class HybridGravity(object):
 
         self.direct_particles = Particles()
         self.tree_particles = Particles()
+        self.timestep = timestep
+
+        # Whether to flip the split so that particles more massive than mass_cut go to the tree code instead of direct
+        if self.tree_code is None:
+            self.combined_gravity = self.direct_code
+        elif self.direct_code is None:
+            self.combined_gravity = self.tree_code
+        else:
+            # So use both gravities
+            # Create the bridge for the two gravities
+            if particles is not None:
+                self.add_particles(particles)
+                self._create_bridge()
+            else:
+                self.combined_gravity = None
 
         self.timestep_history = []
         self.energy_history = []
@@ -105,13 +111,12 @@ class HybridGravity(object):
         self.mass_history = []
 
         self.elapsed_time = 0.0
-        self.timestep = timestep
 
     def _create_bridge(self):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge()
-        #self.combined_gravity.timestep = self.timestep | units.Myr
+        self.combined_gravity.timestep = 0.1*self.timestep | units.Myr
 
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
@@ -168,7 +173,7 @@ class HybridGravity(object):
             self.add_particles_to_direct(self.direct_particles)
             self.add_particles_to_tree(self.tree_particles)
             # Now create the bridge, since both codes used
-            self._create_bridge()
+
 
     def get_total_energy(self):
         """
@@ -201,6 +206,9 @@ class HybridGravity(object):
         start_time = time.time()
 
         sim_time = 0.0 | end_time.unit
+
+        if self.combined_gravity is None:
+            self._create_bridge()
 
         total_initial_energy = self.get_total_energy()
         total_particle_mass = self.get_total_mass()
@@ -247,8 +255,9 @@ class HybridGravity(object):
         Adds particles to the direct Nbody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.direct_code.particles.add_particles(particles)
         self.channel_from_direct = self.direct_code.particles.new_channel_to(particles)
+        self.channel_from_direct.copy()
+        self.direct_code.particles.add_particles(particles)
         self.channel_from_particles_to_direct = self.direct_particles.new_channel_to(self.direct_code.particles)
 
     def add_particles_to_tree(self, particles):
@@ -256,6 +265,7 @@ class HybridGravity(object):
         Adds particles to the tree NBody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.tree_code.particles.add_particles(particles)
         self.channel_from_tree = self.tree_code.particles.new_channel_to(particles)
+        self.channel_from_tree.copy()
+        self.tree_code.particles.add_particles(particles)
         self.channel_from_particles_to_tree = self.tree_particles.new_channel_to(self.tree_code.particles)
