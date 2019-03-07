@@ -83,9 +83,61 @@ if __name__ in ('__main__', '__plot__'):
     plt.plot(timestep_history, energy_history, label="Energy")
     plt.plot(timestep_history, half_mass_history, label="Half-Mass")
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
-    plt.title("Histories")
+    plt.title("Histories: DC {} TC {}".format(args['direct_code'], args['tree_code']))
     plt.legend(loc='best')
-    plt.show()
+    plt.savefig("BothTimestep.png")
+    plt.cla()
+
+    particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
+    particles.mass = mZAMS
+    particles.scale_to_standard(convert_nbody=converter)
+    # set_standard scale to rescale it
+
+    gravity = HybridGravity(direct_code=args['direct_code'],
+                            tree_code=None,
+                            mass_cut=args['mass_cut'] | units.MSun,
+                            timestep=args['timestep'],
+                            flip_split=args['flip_split'],
+                            convert_nbody=converter)
+    gravity.add_particles(particles)
+
+    timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
+
+    print("Timestep length: {}".format(len(timestep_history)))
+
+    plt.plot(timestep_history, mass_history, label="Mass")
+    plt.plot(timestep_history, energy_history, label="Energy")
+    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
+    plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    plt.title("Histories: DC {} TC {}".format(args['direct_code'], None))
+    plt.legend(loc='best')
+    plt.savefig("NoTreeTimestep.png")
+    plt.cla()
+
+    particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
+    particles.mass = mZAMS
+    particles.scale_to_standard(convert_nbody=converter)
+    # set_standard scale to rescale it
+
+    gravity = HybridGravity(direct_code=None,
+                            tree_code=args['tree_code'],
+                            mass_cut=args['mass_cut'] | units.MSun,
+                            timestep=args['timestep'],
+                            flip_split=args['flip_split'],
+                            convert_nbody=converter)
+    gravity.add_particles(particles)
+
+    timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
+
+    print("Timestep length: {}".format(len(timestep_history)))
+
+    plt.plot(timestep_history, mass_history, label="Mass")
+    plt.plot(timestep_history, energy_history, label="Energy")
+    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
+    plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    plt.title("Histories: DC {} TC {}".format(None, args['tree_code']))
+    plt.legend(loc='best')
+    plt.savefig("NoDirectTimestep.png")
     plt.cla()
 
     print(max(energy_history))
