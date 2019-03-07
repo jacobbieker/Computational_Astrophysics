@@ -115,6 +115,10 @@ class HybridGravity(object):
         self.half_mass_history = []
         self.core_radii_history = []
 
+        self.direct_locations = []
+        self.tree_locations = []
+        self.combined_locations = []
+
         self.elapsed_time = 0.0
 
     def _create_bridge(self):
@@ -228,6 +232,11 @@ class HybridGravity(object):
         self.half_mass_history.append(self.get_half_mass())
         self.energy_history.append(self.get_total_energy())
 
+        self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
+        self.direct_locations.append((self.direct_particles.x.value_in(units.parsec), self.direct_particles.y.value_in(units.parsec), self.direct_particles.z.value_in(units.parsec)))
+        self.tree_locations.append((self.tree_particles.x.value_in(units.parsec), self.tree_particles.y.value_in(units.parsec), self.tree_particles.z.value_in(units.parsec)))
+
+
         while sim_time < end_time:
             sim_time += timestep_length
 
@@ -248,6 +257,10 @@ class HybridGravity(object):
             self.core_radii_history.append(self.get_core_radius())
             self.half_mass_history.append(self.get_half_mass())
             self.energy_history.append(self.get_total_energy())
+            self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
+            self.direct_locations.append((self.direct_particles.x.value_in(units.parsec), self.direct_particles.y.value_in(units.parsec), self.direct_particles.z.value_in(units.parsec)))
+            self.tree_locations.append((self.tree_particles.x.value_in(units.parsec), self.tree_particles.y.value_in(units.parsec), self.tree_particles.z.value_in(units.parsec)))
+
 
         if self.direct_code is not None:
             self.direct_code.stop()
@@ -273,7 +286,10 @@ class HybridGravity(object):
                              "flip_split": self.flip_split,
                              "timestep": self.timestep,
                              "num_direct": len(self.direct_particles),
-                             "num_tree": len(self.tree_particles)
+                             "num_tree": len(self.tree_particles),
+                             "direct_particles_locations": self.direct_locations,
+                             "tree_particles_locations": self.tree_locations,
+                             "combined_particles_locations": self.combined_locations,
                             }
 
         return model_information
