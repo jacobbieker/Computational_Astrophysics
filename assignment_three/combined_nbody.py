@@ -65,6 +65,10 @@ if __name__ in ('__main__', '__plot__'):
     particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
     particles.mass = mZAMS
     particles.scale_to_standard(convert_nbody=converter)
+
+    #plt.plot(particles.x.value_in(units.parsec), particles.y.value_in(units.parsec))
+    #plt.show()
+    #exit()
     # set_standard scale to rescale it
 
     gravity = HybridGravity(direct_code=args['direct_code'],
