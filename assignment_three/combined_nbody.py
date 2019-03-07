@@ -5,7 +5,7 @@ from amuse.datamodel import Particle, Particles
 from amuse.ic.plummer import new_plummer_model
 from amuse.ic.salpeter import new_powerlaw_mass_distribution
 from amuse.units import units
-from .HybridGravity import HybridGravity
+from HybridGravity import HybridGravity
 from amuse.community.huayno.interface import Huayno
 import amuse.datamodel.particle_attributes
 import argparse
