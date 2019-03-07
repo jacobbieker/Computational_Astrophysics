@@ -10,6 +10,8 @@ from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.ext.LagrangianRadii import LagrangianRadii
 
+import pickle
+
 from amuse.community.mi6.interface import MI6
 
 import time
@@ -18,7 +20,7 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None, particles=None):
+                 convert_nbody=None, particles=None, number_of_workers=1):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -48,32 +50,32 @@ class HybridGravity(object):
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":
-                    self.direct_code = SmallN(self.converter)
+                    self.direct_code = SmallN(self.converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "huayno":
-                    self.direct_code = Huayno(self.converter)
+                    self.direct_code = Huayno(self.converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "hermite":
-                    self.direct_code = Hermite(self.converter)
+                    self.direct_code = Hermite(self.converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "ph4":
-                    self.direct_code = ph4(self.converter)
+                    self.direct_code = ph4(self.converter, number_of_workers=number_of_workers)
                 else:
                     raise NotImplementedError
             else:
-                self.direct_code = direct_code(self.converter)
+                self.direct_code = direct_code(self.converter, number_of_workers=number_of_workers)
         else:
             self.direct_code = None
 
         if tree_code is not None:
             if isinstance(tree_code, str):
                 if tree_code.lower() == "bhtree":
-                    self.tree_code = BHTree(self.converter)
+                    self.tree_code = BHTree(self.converter, number_of_workers=number_of_workers)
                 elif tree_code.lower() == "bonsai":
-                    self.tree_code = Bonsai(self.converter)
+                    self.tree_code = Bonsai(self.converter, number_of_workers=number_of_workers)
                 elif tree_code.lower() == "octgrav":
-                    self.tree_code = Octgrav(self.converter)
+                    self.tree_code = Octgrav(self.converter, number_of_workers=number_of_workers)
                 else:
                     raise NotImplementedError
             else:
-                self.tree_code = tree_code(self.converter)
+                self.tree_code = tree_code(self.converter, number_of_workers=number_of_workers)
         else:
             self.tree_code = None
 
@@ -104,10 +106,14 @@ class HybridGravity(object):
                 self.combined_gravity = None
 
         self.timestep_history = []
+        self.energy_ratio_history = []
+        self.half_mass_ratio_history = []
+        self.core_radius_ratio_history = []
+        self.mass_history = []
+
         self.energy_history = []
         self.half_mass_history = []
         self.core_radii_history = []
-        self.mass_history = []
 
         self.elapsed_time = 0.0
 
@@ -214,9 +220,13 @@ class HybridGravity(object):
 
         self.timestep_history.append(sim_time.value_in(units.Myr))
         self.mass_history.append(self.get_total_mass() / self.get_total_mass())
-        self.energy_history.append(self.get_total_energy() / self.get_total_energy())
-        self.half_mass_history.append(self.get_half_mass() / self.get_half_mass())
-        self.core_radii_history.append(self.get_core_radius() / self.get_core_radius())
+        self.energy_ratio_history.append(self.get_total_energy() / self.get_total_energy())
+        self.half_mass_ratio_history.append(self.get_half_mass() / self.get_half_mass())
+        self.core_radius_ratio_history.append(self.get_core_radius() / self.get_core_radius())
+
+        self.core_radii_history.append(self.get_core_radius())
+        self.half_mass_history.append(self.get_half_mass())
+        self.energy_history.append(self.get_total_energy())
 
         while sim_time < end_time:
             sim_time += timestep_length
@@ -230,11 +240,14 @@ class HybridGravity(object):
 
             new_energy = self.get_total_energy()
 
-            self.energy_history.append((new_energy) / total_initial_energy)
-            self.half_mass_history.append(self.get_half_mass() / initial_half_mass)
-            self.core_radii_history.append(self.get_core_radius() / initial_core_radii)
+            self.energy_ratio_history.append((new_energy) / total_initial_energy)
+            self.half_mass_ratio_history.append(self.get_half_mass() / initial_half_mass)
+            self.core_radius_ratio_history.append(self.get_core_radius() / initial_core_radii)
             self.mass_history.append(self.get_total_mass() / total_particle_mass)
             self.timestep_history.append(sim_time.value_in(units.Myr))
+            self.core_radii_history.append(self.get_core_radius())
+            self.half_mass_history.append(self.get_half_mass())
+            self.energy_history.append(self.get_total_energy())
 
         if self.direct_code is not None:
             self.direct_code.stop()
@@ -245,7 +258,41 @@ class HybridGravity(object):
 
         self.elapsed_time += end_time - start_time
 
-        return self.timestep_history, self.mass_history, self.energy_history, self.half_mass_history, self.core_radii_history
+        return self.timestep_history, self.mass_history, self.energy_ratio_history, self.half_mass_ratio_history, self.core_radius_ratio_history
+
+    def return_model_history(self):
+        """
+        Returns the output of the model as a dictionary so that it can be returned or analyzed later
+        """
+
+        model_information = {"timestep_history": self.timestep_history,
+                             "energy_history": self.energy_history,
+                             "half_mass_history": self.half_mass_history,
+                             "core_radius_history": self.core_radii_history,
+                             "mass_cut": self.mass_cut,
+                             "flip_split": self.flip_split,
+                             "timestep": self.timestep,
+                             "num_direct": len(self.direct_particles),
+                             "num_tree": len(self.tree_particles)
+                            }
+
+        return model_information
+
+    def save_model_history(self, output_file, input_dict=None):
+        """
+        Saves out the model history and input options
+        :param output_file:
+        :param input_dict:
+        """
+
+        if input_dict is not None:
+            model_dict = [input_dict, self.return_model_history()]
+        else:
+            model_dict = self.return_model_history()
+
+        with open(output_file, "wb") as pickle_file:
+            pickle.dump(model_dict, pickle_file)
+
 
     def add_particles_to_direct(self, particles):
         """

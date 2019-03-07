@@ -5,7 +5,7 @@ from amuse.datamodel import Particle, Particles
 from amuse.ic.plummer import new_plummer_model
 from amuse.ic.salpeter import new_powerlaw_mass_distribution
 from amuse.units import units
-from HybridGravity import HybridGravity
+from .HybridGravity import HybridGravity
 from amuse.community.huayno.interface import Huayno
 import amuse.datamodel.particle_attributes
 import argparse
@@ -77,13 +77,23 @@ if __name__ in ('__main__', '__plot__'):
 
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
 
+    gravity.save_model_history(output_file="History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}.p".format(args['direct_code'],
+                                                                                                                                       args['tree_code'],
+                                                                                                                                       cluster_mass,
+                                                                                                                                       args['virial_radius'],
+                                                                                                                                       args['mass_cut'],
+                                                                                                                                       str(args['flip_split']),
+                                                                                                                                       args['num_bodies'],
+                                                                                                                                       args['timestep']),
+                               input_dict=args)
+
     print("Timestep length: {}".format(len(timestep_history)))
 
     plt.plot(timestep_history, mass_history, label="Mass")
     plt.plot(timestep_history, energy_history, label="Energy")
     plt.plot(timestep_history, half_mass_history, label="Half-Mass")
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
-    plt.title("Histories: DC {} TC {}".format(args['direct_code'], args['tree_code']))
+    plt.title("Histories: DC {} TC {} WallTime: {}".format(args['direct_code'], args['tree_code'], gravity.elapsed_time))
     plt.legend(loc='best')
     plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}.png".format(args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'], str(args['flip_split']), args['num_bodies'], args['timestep']))
     plt.cla()
