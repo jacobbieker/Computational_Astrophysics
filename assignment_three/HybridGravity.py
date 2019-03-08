@@ -115,7 +115,7 @@ class HybridGravity(object):
         self.half_mass_history = []
         self.core_radii_history = []
 
-        self.direct_locations = []
+        self.particle_masses = []
         self.tree_locations = []
         self.combined_locations = []
 
@@ -125,7 +125,6 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge()
-        self.combined_gravity.timestep = 0.1*self.timestep | units.Myr
 
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
@@ -233,7 +232,10 @@ class HybridGravity(object):
         self.energy_history.append(self.get_total_energy())
 
         self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
-        self.direct_locations.append(self.combined_gravity.particles.mass.value_in(units.MSun))
+        self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
+
+        self.combined_gravity.timestep = self.timestep | units.Myr
+
 
         while sim_time < end_time:
             sim_time += timestep_length
@@ -256,7 +258,7 @@ class HybridGravity(object):
             self.half_mass_history.append(self.get_half_mass())
             self.energy_history.append(self.get_total_energy())
             self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
-            self.direct_locations.append(self.combined_gravity.particles.mass.value_in(units.MSun))
+            self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
 
         if self.direct_code is not None:
@@ -284,7 +286,7 @@ class HybridGravity(object):
                              "timestep": self.timestep,
                              "num_direct": len(self.direct_particles),
                              "num_tree": len(self.tree_particles),
-                             "particle_history": self.direct_locations,
+                             "particle_history": self.particle_masses,
                              "combined_particles_locations": self.combined_locations,
                             }
 
