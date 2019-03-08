@@ -1,6 +1,7 @@
 from amuse.ext.bridge import bridge
 from amuse.units import units
 from amuse.datamodel import Particles
+from amuse.units import nbody_system
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
 from amuse.community.smalln.interface import SmallN
@@ -20,7 +21,7 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None, particles=None, number_of_workers=1):
+                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -46,40 +47,57 @@ class HybridGravity(object):
         """
 
         self.converter = convert_nbody
+        if tree_converter is not None:
+            self.tree_converter = tree_converter
+        else:
+            self.tree_converter = convert_nbody
+        if direct_converter is not None:
+            self.direct_converter = direct_converter
+        else:
+            self.direct_converter = convert_nbody
 
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":
-                    self.direct_code = SmallN(self.converter, number_of_workers=number_of_workers)
+                    self.direct_code = SmallN(direct_converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "huayno":
-                    self.direct_code = Huayno(self.converter, number_of_workers=number_of_workers)
+                    self.direct_code = Huayno(direct_converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "hermite":
-                    self.direct_code = Hermite(self.converter, number_of_workers=number_of_workers)
+                    self.direct_code = Hermite(direct_converter, number_of_workers=number_of_workers)
                 elif direct_code.lower() == "ph4":
-                    self.direct_code = ph4(self.converter, number_of_workers=number_of_workers)
+                    self.direct_code = ph4(direct_converter, number_of_workers=number_of_workers)
                 else:
                     raise NotImplementedError
             else:
-                self.direct_code = direct_code(self.converter, number_of_workers=number_of_workers)
+                self.direct_code = direct_code(direct_converter, number_of_workers=number_of_workers)
         else:
             self.direct_code = None
 
         if tree_code is not None:
             if isinstance(tree_code, str):
                 if tree_code.lower() == "bhtree":
-                    self.tree_code = BHTree(self.converter, number_of_workers=number_of_workers)
+                    self.tree_code = BHTree(tree_converter, number_of_workers=number_of_workers)
                 elif tree_code.lower() == "bonsai":
-                    self.tree_code = Bonsai(self.converter, number_of_workers=number_of_workers)
+                    self.tree_code = Bonsai(tree_converter, number_of_workers=number_of_workers)
                 elif tree_code.lower() == "octgrav":
-                    self.tree_code = Octgrav(self.converter, number_of_workers=number_of_workers)
+                    self.tree_code = Octgrav(tree_converter, number_of_workers=number_of_workers)
                 else:
                     raise NotImplementedError
             else:
-                self.tree_code = tree_code(self.converter, number_of_workers=number_of_workers)
+                self.tree_code = tree_code(tree_converter, number_of_workers=number_of_workers)
         else:
             self.tree_code = None
 
+        if self.tree_code is None:
+            self.combined_gravity = self.direct_code
+        elif self.direct_code is None:
+            self.combined_gravity = self.tree_code
+        else:
+            # So use both gravities
+            self.combined_gravity = None
+
         self.mass_cut = mass_cut
+        self.num_workers = number_of_workers
 
         self.flip_split = flip_split
 
@@ -93,17 +111,6 @@ class HybridGravity(object):
         self.timestep = timestep
 
         # Whether to flip the split so that particles more massive than mass_cut go to the tree code instead of direct
-        if self.tree_code is None:
-            self.combined_gravity = self.direct_code
-        elif self.direct_code is None:
-            self.combined_gravity = self.tree_code
-        else:
-            # So use both gravities
-            # Create the bridge for the two gravities
-            if particles is not None:
-                self.add_particles(particles)
-            else:
-                self.combined_gravity = None
 
         self.timestep_history = []
         self.energy_ratio_history = []
@@ -173,6 +180,11 @@ class HybridGravity(object):
                     else:
                         self.tree_particles.add_particle(particle)
 
+            # Now here, if the converters exist, should scale to them too to the correct standard
+            #if self.direct_converter is not None and self.tree_converter is not None:
+            #    self.direct_particles.scale_to_standard(convert_nbody=self.direct_converter)
+            #    self.tree_particles.scale_to_standard(convert_nbody=self.tree_converter)
+
         if self.direct_code is None:
             self.add_particles_to_tree(self.tree_particles)
         elif self.tree_code is None:
@@ -189,10 +201,7 @@ class HybridGravity(object):
         Returns the combined energy of the tree and direct code
         :return: Returns the total energy of the system
         """
-        if self.tree_code is not None and self.direct_code is not None:
-            return self.tree_code.potential_energy + self.tree_code.kinetic_energy + self.direct_code.kinetic_energy + self.direct_code.potential_energy
-        else:
-            return self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
+        return self.combined_gravity.potential_energy + self.combined_gravity.kinetic_energy
 
     def get_total_mass(self):
         """
@@ -313,9 +322,8 @@ class HybridGravity(object):
         Adds particles to the direct Nbody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.channel_from_direct = self.direct_code.particles.new_channel_to(particles)
-        self.channel_from_direct.copy()
         self.direct_code.particles.add_particles(particles)
+        self.channel_from_direct = self.direct_code.particles.new_channel_to(particles)
         self.channel_from_particles_to_direct = self.direct_particles.new_channel_to(self.direct_code.particles)
 
     def add_particles_to_tree(self, particles):
@@ -323,7 +331,6 @@ class HybridGravity(object):
         Adds particles to the tree NBody code
         :param particles: A Particles() object containing the particles to add
         """
-        self.channel_from_tree = self.tree_code.particles.new_channel_to(particles)
-        self.channel_from_tree.copy()
         self.tree_code.particles.add_particles(particles)
+        self.channel_from_tree = self.tree_code.particles.new_channel_to(particles)
         self.channel_from_particles_to_tree = self.tree_particles.new_channel_to(self.tree_code.particles)

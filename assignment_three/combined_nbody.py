@@ -56,8 +56,8 @@ def get_args():
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
-    cluster_mass = 7.*(args['num_bodies'] / 10.) | units.MSun
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
+    cluster_mass = 8.*(args['num_bodies'] / 10.) | units.MSun
 
     print(np.sum(mZAMS))
     print(mZAMS.sum())
@@ -71,6 +71,43 @@ if __name__ in ('__main__', '__plot__'):
     particles.mass = mZAMS
     particles.scale_to_standard(convert_nbody=converter)
 
+    print(particles.virial_radius().value_in(units.parsec))
+
+    plt.hist(particles.mass.value_in(units.MSun), histtype='step')
+    plt.hist(mZAMS.value_in(units.MSun), histtype='step')
+    plt.yscale("log")
+    plt.show()
+    plt.cla()
+
+    # Now get the masses in each one for the different converters
+    direct_particles = Particles()
+    tree_particles = Particles()
+    tree_converter = None
+    direct_converter = None
+    if args['tree_code'] is not None and args['direct_code'] is not None:
+        for particle in particles:
+            if particle.mass >= args['mass_cut'] | units.MSun:
+                if args['flip_split']:
+                    tree_particles.add_particle(particle)
+                else:
+                    direct_particles.add_particle(particle)
+            else:
+                if args['flip_split']:
+                    direct_particles.add_particle(particle)
+                else:
+                    tree_particles.add_particle(particle)
+
+        if args['tree_code'] is not None:
+            tree_converter = nbody_system.nbody_to_si(tree_particles.mass.sum(), tree_particles.virial_radius())
+        if args['direct_code'] is not None:
+            direct_converter = nbody_system.nbody_to_si(direct_particles.mass.sum(), direct_particles.virial_radius())
+
+        print(direct_particles.mass.sum().value_in(units.MSun))
+        print(tree_particles.mass.sum().value_in(units.MSun))
+        print(particles.mass.sum().value_in(units.MSun))
+        print(direct_particles.virial_radius().value_in(units.parsec))
+        print(tree_particles.virial_radius().value_in(units.parsec))
+        print(particles.virial_radius().value_in(units.parsec))
     #plt.plot(particles.x.value_in(units.parsec), particles.y.value_in(units.parsec))
     #plt.show()
     #exit()
@@ -81,7 +118,9 @@ if __name__ in ('__main__', '__plot__'):
                             mass_cut=args['mass_cut'] | units.MSun,
                             timestep=args['timestep'],
                             flip_split=args['flip_split'],
-                            convert_nbody=converter)
+                            convert_nbody=converter,
+                            tree_converter=tree_converter,
+                            direct_converter=direct_converter)
     gravity.add_particles(particles)
 
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(args['end_time'] | units.Myr)
