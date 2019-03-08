@@ -19,8 +19,6 @@ particles = new_plummer_model(10000, convert_nbody=converter)
 particles.mass = mZAMS
 particles.scale_to_standard(convert_nbody=converter) # Scale the converter to the correct virial radius and mass
 
-print(particles.virial_radius().value_in(units.parsec)) # Prints out the virial raidus, should be about 3
-
 # Now get the masses in each one for the different converters
 direct_particles = Particles()
 tree_particles = Particles()
