@@ -91,7 +91,7 @@ if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
-    cluster_mass = 8. * (args['num_bodies'] / 10.) | units.MSun
+    cluster_mass = (args['num_bodies']) | units.MSun
 
     print(np.sum(mZAMS))
     print(mZAMS.sum())
