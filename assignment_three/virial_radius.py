@@ -4,16 +4,18 @@ from amuse.ic.salpeter import new_powerlaw_mass_distribution
 from amuse.datamodel import Particle, Particles
 from amuse.units import units
 from amuse.community.ph4.interface import ph4
+from amuse.community.hermite0.interface import Hermite
 from amuse.ext.bridge import bridge
 from amuse.units import quantities
 from amuse.community.bhtree.interface import BHTree
 import matplotlib.pyplot as pyplot
 
 # Create the required mass distribution
+cluster_mass = 1e5 | units.MSun
 mZAMS = new_powerlaw_mass_distribution(10000, 0.1|units.MSun, 100|units.MSun, alpha=-2.0)
 
 # Create a converter for the whole system
-converter = nbody_system.nbody_to_si(mZAMS.sum(), 3. |units.parsec)
+converter = nbody_system.nbody_to_si(cluster_mass, 3. |units.parsec)
 
 particles = new_plummer_model(10000, convert_nbody=converter)
 particles.mass = mZAMS
@@ -62,15 +64,15 @@ for i,t in enumerate(times):
 
     new_energy = system.potential_energy + system.kinetic_energy
 
-    energy_history.append(new_energy/initial_energy)
+    energy_history.append((initial_energy - new_energy)/initial_energy)
     timestep_history.append(i)
 
     #inner_stars =  galaxy.select(lambda r: r.length()<Rinit,["position"])
     #print "Minner=", inner_stars.mass.sum().in_(units.MSun)
 
-    system.evolve_model(t,timestep= 0.1 | units.Myr)
+    system.evolve_model(t)
 pyplot.plot(timestep_history, energy_history)
-pyplot.title("Energy Loss Over Time")
+pyplot.title("Energy Loss Over Time 0.0001 Hermite")
 pyplot.xlabel("Timestep")
 pyplot.ylabel("E_curr/E_initial")
 pyplot.show()

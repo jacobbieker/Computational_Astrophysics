@@ -56,6 +56,9 @@ class HybridGravity(object):
         else:
             self.direct_converter = convert_nbody
 
+        print(direct_converter)
+        print(tree_converter)
+
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":
@@ -132,9 +135,8 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge()
-
-        self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
+        self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
 
     def get_core_radius(self):
         """
@@ -254,7 +256,7 @@ class HybridGravity(object):
             if self.channel_from_tree is not None:
                 self.channel_from_tree.copy()
 
-            self.combined_gravity.evolve_model(sim_time)
+            self.combined_gravity.evolve_model(sim_time, timestep=timestep_length)
 
             new_energy = self.get_total_energy()
 
