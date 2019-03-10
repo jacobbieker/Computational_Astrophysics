@@ -56,9 +56,6 @@ class HybridGravity(object):
         else:
             self.direct_converter = convert_nbody
 
-        print(direct_converter)
-        print(tree_converter)
-
         if direct_code is not None:
             if isinstance(direct_code, str):
                 if direct_code.lower() == "smalln":

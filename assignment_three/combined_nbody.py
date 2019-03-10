@@ -93,7 +93,7 @@ if __name__ in ('__main__', '__plot__'):
     args = get_args()
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
-    cluster_mass = (args['num_bodies']) | units.MSun
+    cluster_mass = mZAMS.sum() # (args['num_bodies']) | units.MSun
 
     print(np.sum(mZAMS))
     print(mZAMS.sum())
@@ -182,7 +182,7 @@ if __name__ in ('__main__', '__plot__'):
     plt.plot(timestep_history, half_mass_history, label="Half-Mass")
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
     plt.title(
-        "Histories: DC {} TC {} WallTime: {}".format(args['direct_code'], args['tree_code'], gravity.elapsed_time))
+        "Histories: DC {} TC {} WallTime: {} s".format(args['direct_code'], args['tree_code'], np.round(gravity.elapsed_time, 3)))
     plt.legend(loc='best')
     plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}.png".format(
         args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'],
