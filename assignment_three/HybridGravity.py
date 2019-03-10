@@ -117,6 +117,7 @@ class HybridGravity(object):
         self.half_mass_ratio_history = []
         self.core_radius_ratio_history = []
         self.mass_history = []
+        self.walltime_history = []
 
         self.energy_history = []
         self.half_mass_history = []
@@ -242,6 +243,7 @@ class HybridGravity(object):
         self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
         self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
+        self.walltime_history.append(self.elapsed_time)
         self.combined_gravity.timestep = self.timestep | units.Myr
 
         timestep_check = end_time / 10.
@@ -273,6 +275,7 @@ class HybridGravity(object):
             end_step_time = time.time()
 
             self.elapsed_time += end_step_time - start_step_time
+            self.walltime_history.append(end_step_time - start_time) # Time used in step, summed up gives wall time
             # Save model history as a checkpoint every tenth of the total simulation
             if sim_time >= timestep_check:
                 if self.input_args is None:
@@ -304,7 +307,8 @@ class HybridGravity(object):
                              "mass_cut": self.mass_cut,
                              "flip_split": self.flip_split,
                              "timestep": self.timestep,
-                             "wall_time": self.elapsed_time,
+                             "wall_time": self.walltime_history,
+                             "total_elapsed_time": self.elapsed_time,
                              "num_direct": len(self.direct_particles),
                              "num_tree": len(self.tree_particles),
                              "particle_history": self.particle_masses,

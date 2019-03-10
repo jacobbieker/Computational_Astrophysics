@@ -8,7 +8,7 @@ import pandas as pd
 # Picked the Hermite and bhtree 100 stars only file
 # no mass seperation yet since it isn't relevant until the bridge is right and the converter is correct
 
-filenames = ["/home/jacob/Development/comp_astro/assignment_three/History_DC_huayno_TC_None_ClusterMass_1000 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_1000_Timestep_0.1.p"]
+filenames = ["/home/jacob/Development/comp_astro/assignment_three/History_DC_hermite_TC_bhtree_ClusterMass_800.0 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_1000_Timestep_0.1.p"]
 
 
 def convert_from_pickle(filename):
@@ -55,6 +55,9 @@ def create_animation(df, input_args, num_timesteps, axlims=None):
     For the virial radius, it would be ([-3.,3.], [-3.,3.], [-3.,3.])
     :return:
     """
+
+    Writer = matplotlib.animation.writers['ffmpeg']
+    writer = Writer(fps=15, bitrate=1800)
     def update_graph(num):
         """
         Updates the graph's positions
@@ -93,6 +96,27 @@ def create_animation(df, input_args, num_timesteps, axlims=None):
     ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
 
     plt.show()
+    if axlims is None:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}.mp4".format(input_args['direct_code'],
+                                        input_args['tree_code'],
+                                        input_args['virial_radius'],
+                                        input_args['mass_cut'],
+                                        str(input_args['flip_split']),
+                                        input_args['num_bodies'],
+                                        input_args['timestep']), writer=writer)
+    else:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}_AxLim_{}.mp4".format(input_args['direct_code'],
+                                          input_args['tree_code'],
+                                          input_args['virial_radius'],
+                                          input_args['mass_cut'],
+                                          str(input_args['flip_split']),
+                                          input_args['num_bodies'],
+                                          input_args['timestep'],
+                                                   axlims), writer=writer)
     plt.cla()
 
 for filename in filenames:
