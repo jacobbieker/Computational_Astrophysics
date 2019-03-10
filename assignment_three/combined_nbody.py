@@ -49,6 +49,8 @@ def get_args():
                     help="Virial Radius in kpc, defaults to 3.")
     ap.add_argument("-c", "--use_converter", required=False, default=True, type=str2bool,
                     help="Whether to use the converter from nbody units to physical units, with units 1 MSun, 1 kpc, defaults to True")
+    ap.add_argument("-w", "--workers", required=False, default=1, type=int,
+                    help="Number of workers each gravity code should use.")
 
     args_dict = vars(ap.parse_args())
 
@@ -137,6 +139,7 @@ if __name__ in ('__main__', '__plot__'):
         print(tree_particles.virial_radius().value_in(units.parsec))
         print(particles.virial_radius().value_in(units.parsec))
     else:
+        # No splitting, so all the converters are the same
         tree_converter = converter
         direct_converter = converter
         plot_sanity_checks(all_particles=particles, stellar_distribution=mZAMS)
@@ -152,7 +155,9 @@ if __name__ in ('__main__', '__plot__'):
                             flip_split=args['flip_split'],
                             convert_nbody=converter,
                             tree_converter=tree_converter,
-                            direct_converter=direct_converter)
+                            direct_converter=direct_converter,
+                            number_of_workers=args['workers'],
+                            input_args=args)
     gravity.add_particles(particles)
 
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(

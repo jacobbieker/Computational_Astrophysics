@@ -9,19 +9,17 @@ from amuse.community.ph4.interface import ph4
 from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
-from amuse.ext.LagrangianRadii import LagrangianRadii
+from amuse.io import write_set_to_file
+from amuse.io import read_set_from_file
 
 import pickle
-
-from amuse.community.mi6.interface import MI6
-
 import time
 
 
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None):
+                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -45,6 +43,8 @@ class HybridGravity(object):
         :param convert_nbody: The converter to use if needed to convert the nbody units to physical units, defaults to None
 
         """
+
+        self.input_args = input_args
 
         self.converter = convert_nbody
         if tree_converter is not None:
@@ -247,6 +247,7 @@ class HybridGravity(object):
 
         self.combined_gravity.timestep = self.timestep | units.Myr
 
+        timestep_check = end_time / 10.
 
         while sim_time < end_time:
             sim_time += timestep_length
@@ -271,15 +272,22 @@ class HybridGravity(object):
             self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
             self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
+            end_wall_time = time.time()
+
+            self.elapsed_time = end_wall_time - start_time
+            # Save model history as a checkpoint every tenth of the total simulation
+            if sim_time >= timestep_check:
+                if self.input_args is None:
+                    write_set_to_file(self.combined_gravity.particles, "Sim_N_{}_MC_{}_W_{}.hdf".format(len(self.combined_gravity.particles), self.mass_cut, self.num_workers), "amuse")
+                else:
+                    write_set_to_file(self.combined_gravity.particles, "Sim_N_{}_MC_{}_W_{}_DC_{}_TC_{}.hdf".format(len(self.combined_gravity.particles), self.mass_cut.value_in(units.MSun), self.num_workers, self.input_args['direct_code'], self.input_args['tree_code']), "amuse")
+                self.save_model_history("Sim_N_{}_MC_{}_W_{}.p".format(len(self.combined_gravity.particles), self.mass_cut, self.num_workers), input_dict=self.input_args)
+                timestep_check += end_time / 10.
 
         if self.direct_code is not None:
             self.direct_code.stop()
         if self.tree_code is not None:
             self.tree_code.stop()
-
-        end_time = time.time()
-
-        self.elapsed_time += end_time - start_time
 
         return self.timestep_history, self.mass_history, self.energy_ratio_history, self.half_mass_ratio_history, self.core_radius_ratio_history
 
@@ -295,6 +303,7 @@ class HybridGravity(object):
                              "mass_cut": self.mass_cut,
                              "flip_split": self.flip_split,
                              "timestep": self.timestep,
+                             "wall_time": self.elapsed_time,
                              "num_direct": len(self.direct_particles),
                              "num_tree": len(self.tree_particles),
                              "particle_history": self.particle_masses,
