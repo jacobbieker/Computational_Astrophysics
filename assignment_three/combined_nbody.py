@@ -165,14 +165,15 @@ if __name__ in ('__main__', '__plot__'):
 
     gravity.save_model_history(output_file="History_DC_{}_TC_{}_ClusterMass_{}_"
                                            "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                                           "Timestep_{}.p".format(args['direct_code'],
+                                           "Timestep_{}_EndTime_{}.p".format(args['direct_code'],
                                                                   args['tree_code'],
                                                                   cluster_mass,
                                                                   args['virial_radius'],
                                                                   args['mass_cut'],
                                                                   str(args['flip_split']),
                                                                   args['num_bodies'],
-                                                                  args['timestep']),
+                                                                  args['timestep'],
+                                                                    args['end_time']),
                                input_dict=args)
 
     print("Timestep length: {}".format(len(timestep_history)))
