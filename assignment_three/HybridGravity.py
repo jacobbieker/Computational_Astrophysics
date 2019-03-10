@@ -1,4 +1,4 @@
-from amuse.ext.bridge import bridge
+from amuse.couple import bridge
 from amuse.units import units
 from amuse.datamodel import Particles
 from amuse.units import nbody_system
@@ -132,7 +132,8 @@ class HybridGravity(object):
     def _create_bridge(self):
         # So use both gravities
         # Create the bridge for the two gravities
-        self.combined_gravity = bridge()
+        self.combined_gravity = bridge.Bridge(use_threading=True)
+        self.combined_gravity.timestep = 0.001*0.1 | units.Myr
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
 
@@ -180,11 +181,6 @@ class HybridGravity(object):
                     else:
                         self.tree_particles.add_particle(particle)
 
-            # Now here, if the converters exist, should scale to them too to the correct standard
-            #if self.direct_converter is not None and self.tree_converter is not None:
-            #    self.direct_particles.scale_to_standard(convert_nbody=self.direct_converter)
-            #    self.tree_particles.scale_to_standard(convert_nbody=self.tree_converter)
-
         if self.direct_code is None:
             self.add_particles_to_tree(self.tree_particles)
         elif self.tree_code is None:
@@ -194,7 +190,6 @@ class HybridGravity(object):
             self.add_particles_to_tree(self.tree_particles)
             # Now create the bridge, since both codes used
             self._create_bridge()
-
 
     def get_total_energy(self):
         """
@@ -252,12 +247,12 @@ class HybridGravity(object):
             sim_time += timestep_length
             start_step_time = time.time()
 
+            self.combined_gravity.evolve_model(sim_time)
+
             if self.channel_from_direct is not None:
                 self.channel_from_direct.copy()
             if self.channel_from_tree is not None:
                 self.channel_from_tree.copy()
-
-            self.combined_gravity.evolve_model(sim_time, timestep=timestep_length)
 
             new_energy = self.get_total_energy()
 

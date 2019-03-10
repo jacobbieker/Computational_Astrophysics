@@ -14,6 +14,164 @@ import matplotlib.pyplot as plt
 import pickle
 
 
+def load_history_from_file(filename):
+    pickleFile = pickle.load(open(filename, 'rb'), fix_imports=True, encoding='latin1')
+
+    dict_data = pickleFile[1]
+    input_args = pickleFile[0]
+
+    # Depending on version, might have wall time history or not
+
+    try:
+        walltime = dict_data['total_elapsed_time']
+    except KeyError:
+        walltime = dict_data['wall_time']
+
+    timesteps = dict_data['timestep_history'] * 0.1
+    energies = dict_data['energy_history']
+    half_mass = dict_data['half_mass_history']
+    core_radii = dict_data['core_radius_history']
+    mass_cut = dict_data['mass_cut'].value_in(units.MSun)
+    flip_split = dict_data['flip_split']
+    integrators = (input_args['direct_code'], input_args['tree_code'])
+
+    return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators
+
+def calc_delta_energy(energies):
+    """
+    Given the format saved, get the energy change over time
+    :param energies:
+    :return: The delta_E
+    """
+
+    initial_energy = energies[0]
+    delta_energy = []
+    for energy in energies:
+        delta_energy.append((initial_energy - energy)/initial_energy)
+
+    return delta_energy
+
+def plot_outputs(only_direct_name, only_tree_name, combined_names):
+    """
+    Makes most of the plot outputs for the report
+    Given a direct_name, tree_name, and set of combined_names, load the data into dataframes and run from there
+
+    Plots the energy distribution
+    The Wall time vs mass_cut
+
+    The Final energy error as function of split
+
+    The Relative Error Energy
+
+    Half mass and core radii as function of time
+
+
+    :param only_direct_name:
+    :param only_tree_name:
+    :param combined_names:
+    :return:
+    """
+
+    direct_data = load_history_from_file(only_direct_name)
+    tree_data = load_history_from_file(only_tree_name)
+    combined_datas = []
+    for filename in combined_names:
+        combined_datas.append(load_history_from_file(filename))
+
+
+    # First is the energy error over time
+    plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='r')
+    plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', linestyle='dashed', c='b')
+    for combined_data in combined_datas:
+        plt.plot(combined_data[0], calc_delta_energy(combined_data[1]), label='Cut: {}'.format(combined_data[4]))
+    plt.ylabel('(E_init - E_curr)/E_init')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Relative Energy Error")
+    plt.legend(loc='best')
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+
+    # Now the Half Mass and Core Radii Over time
+    plt.plot(direct_data[0], direct_data[2], label='Direct Half Mass', c='r')
+    plt.plot(tree_data[0], tree_data[2], label='Tree Half Mass', linestyle='dashed', c='r')
+    for combined_data in combined_datas:
+        plt.plot(combined_data[0], combined_data[2], label='Cut: {} Half Mass'.format(combined_data[4]))
+    plt.plot(direct_data[0], direct_data[3], label='Direct Core Radii', c='b')
+    plt.plot(tree_data[0], tree_data[3], label='Tree Core Radii', linestyle='dashed', c='b')
+    for combined_data in combined_datas:
+        plt.plot(combined_data[0], combined_data[3], label='Cut: {} Core Radii'.format(combined_data[4]))
+    plt.ylabel('Value (parsecs)')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Half Mass and Core Radii")
+    plt.legend(loc='best')
+    plt.savefig("Half_Mass_Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+
+    # Final Energy Error as function of the split
+
+    # First need to change it to the available cuts
+    final_error = []
+    done_splits = []
+    flipped_final_error = []
+    flipped_done_splits = []
+
+    final_error.append(calc_delta_energy([direct_data[1][-1]]))
+    final_error.append(calc_delta_energy([tree_data[1][-1]]))
+    done_splits.append(1.0)
+    done_splits.append(0.0)
+
+    flipped_final_error.append(calc_delta_energy([direct_data[1][-1]]))
+    flipped_final_error.append(calc_delta_energy([tree_data[1][-1]]))
+    flipped_done_splits.append(0.0)
+    flipped_done_splits.append(1.0)
+    for combined_data in combined_datas:
+        if not combined_data[5]:
+            final_error.append(calc_delta_energy([combined_data[1][-1]]))
+            done_splits.append(combined_data[3])
+        else:
+            flipped_final_error.append(calc_delta_energy([combined_data[1][-1]]))
+            flipped_done_splits.append(combined_data[3])
+
+    plt.plot(done_splits, final_error, label='Direct >= Cut', c='r')
+    plt.plot(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
+    plt.xlabel("Mass Split (MSun)")
+    plt.ylabel("(E_init - E_final)/E_init")
+    plt.title("Final Energy Error by Mass Cut")
+    plt.legend(loc='best')
+    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+
+    # Wall Time vs Mass Cut
+    final_walltime = []
+    mass_cut_list = []
+    flipped_final_walltime = []
+    flipped_mass_cut_list = []
+
+    final_walltime.append(direct_data[6])
+    final_walltime.append(tree_data[6])
+    mass_cut_list.append(1.0)
+    mass_cut_list.append(0.0)
+
+    flipped_final_walltime.append(direct_data[6])
+    flipped_final_walltime.append(tree_data[6])
+    flipped_mass_cut_list.append(0.0)
+    flipped_mass_cut_list.append(1.0)
+    for combined_data in combined_datas:
+        if not combined_data[5]:
+            final_walltime.append([combined_data[6]])
+            mass_cut_list.append(combined_data[3])
+        else:
+            flipped_final_walltime.append(combined_data[6])
+            flipped_mass_cut_list.append(combined_data[3])
+
+    plt.plot(mass_cut_list, final_walltime, label='Direct >= Cut', c='r')
+    plt.plot(flipped_mass_cut_list, flipped_final_walltime, label='Tree >= Cut', c='b')
+    plt.xlabel("Mass Split (MSun)")
+    plt.ylabel("Walltime (sec)")
+    plt.title("Walltime vs Mass Split")
+    plt.legend(loc='best')
+    plt.savefig("Mass_Split_Walltime_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+
+    return NotImplementedError
+
+
 def get_args():
     """
     Obtains and returns a dictionary of the command line arguments for this program
@@ -91,6 +249,7 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
+    np.random.seed(1337) # Set for reproducability
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
     cluster_mass = mZAMS.sum() # (args['num_bodies']) | units.MSun
