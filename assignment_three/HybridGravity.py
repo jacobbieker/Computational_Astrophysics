@@ -248,6 +248,7 @@ class HybridGravity(object):
 
         while sim_time < end_time:
             sim_time += timestep_length
+            start_step_time = time.time()
 
             if self.channel_from_direct is not None:
                 self.channel_from_direct.copy()
@@ -269,9 +270,9 @@ class HybridGravity(object):
             self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
             self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
-            end_wall_time = time.time()
+            end_step_time = time.time()
 
-            self.elapsed_time = end_wall_time - start_time
+            self.elapsed_time += end_step_time - start_step_time
             # Save model history as a checkpoint every tenth of the total simulation
             if sim_time >= timestep_check:
                 if self.input_args is None:
@@ -285,6 +286,9 @@ class HybridGravity(object):
             self.direct_code.stop()
         if self.tree_code is not None:
             self.tree_code.stop()
+
+        end_wall_time = time.time()
+        self.elapsed_time = end_wall_time - start_time
 
         return self.timestep_history, self.mass_history, self.energy_ratio_history, self.half_mass_ratio_history, self.core_radius_ratio_history
 
