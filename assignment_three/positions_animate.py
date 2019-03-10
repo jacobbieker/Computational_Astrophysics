@@ -9,6 +9,9 @@ import pandas as pd
 # no mass seperation yet since it isn't relevant until the bridge is right and the converter is correct
 
 filenames = [
+    "History_DC_ph4_TC_None_ClusterMass_132.12625693121714 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_100_Timestep_0.1.p",
+    "History_DC_None_TC_bhtree_ClusterMass_65.21805817083936 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_100_Timestep_0.1.p",
+    "History_DC_None_TC_bhtree_ClusterMass_100000.0 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1.p",
     "/home/jacob/Development/comp_astro/assignment_three/History_DC_hermite_TC_bhtree_ClusterMass_800.0 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_1000_Timestep_0.1.p"]
 
 
@@ -49,8 +52,7 @@ def convert_from_pickle(filename):
         core_r_list = core_radii_data[j]
         half_mass_list = half_mass_data[j]
         for i in range(len(xdata[0])):
-            df = df.append({'x': xlist[i], 'y': ylist[i], 'z': zlist[i], 'core_radius': core_r_list[j],
-                            'half_mass': half_mass_list[j]}, ignore_index=True)
+            df = df.append({'x': xlist[i], 'y': ylist[i], 'z': zlist[i],}, ignore_index=True)
     df["time"] = t
 
     return df, input_args, num_timesteps
