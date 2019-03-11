@@ -133,7 +133,7 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge.Bridge(use_threading=True)
-        self.combined_gravity.timestep = 0.001*0.1 | units.Myr
+        self.combined_gravity.timestep = 0.1*self.timestep | units.Myr
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
 
