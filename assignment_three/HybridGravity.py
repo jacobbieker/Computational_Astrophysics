@@ -10,7 +10,6 @@ from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.io import write_set_to_file
-from amuse.io import read_set_from_file
 
 import pickle
 import time
