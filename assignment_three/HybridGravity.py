@@ -155,30 +155,36 @@ class HybridGravity(object):
                                                         unit_converter=self.converter)[0][0]
         return total_radius
 
-    def add_particles(self, particles):
+    def add_particles(self, particles, method='mass'):
         """
         Adds particles, splitting them up based on the mass_cut set
         :param particles: The Particles() object containing the particles to add
         """
+        if method == 'mass':
+            if self.direct_code is None:
+                self.tree_particles.add_particles(particles)
 
-        if self.direct_code is None:
-            self.tree_particles.add_particles(particles)
-
-        elif self.tree_code is None:
-            self.direct_particles.add_particles(particles)
+            elif self.tree_code is None:
+                self.direct_particles.add_particles(particles)
+            else:
+                # Need to split based on the mass cut
+                for particle in particles:
+                    if particle.mass >= self.mass_cut:
+                        if self.flip_split:
+                            self.tree_particles.add_particle(particle)
+                        else:
+                            self.direct_particles.add_particle(particle)
+                    else:
+                        if self.flip_split:
+                            self.direct_particles.add_particle(particle)
+                        else:
+                            self.tree_particles.add_particle(particle)
+        elif method == 'radius':
+            raise NotImplementedError
+        elif method == 'half_mass':
+            raise NotImplementedError
         else:
-            # Need to split based on the mass cut
-            for particle in particles:
-                if particle.mass >= self.mass_cut:
-                    if self.flip_split:
-                        self.tree_particles.add_particle(particle)
-                    else:
-                        self.direct_particles.add_particle(particle)
-                else:
-                    if self.flip_split:
-                        self.direct_particles.add_particle(particle)
-                    else:
-                        self.tree_particles.add_particle(particle)
+            raise NotImplementedError
 
         if self.direct_code is None:
             self.add_particles_to_tree(self.tree_particles)
