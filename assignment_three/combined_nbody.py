@@ -209,6 +209,8 @@ def get_args():
                     help="Whether to use the converter from nbody units to physical units, with units 1 MSun, 1 kpc, defaults to True")
     ap.add_argument("-w", "--workers", required=False, default=1, type=int,
                     help="Number of workers each gravity code should use.")
+    ap.add_argument("-s", "--seed", required=False, default=5227, type=int,
+                    help="Seed for random numbers")
 
     args_dict = vars(ap.parse_args())
 
@@ -249,7 +251,7 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
-    np.random.seed(1337) # Set for reproducability
+    np.random.seed(args['seed']) # Set for reproducability
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
     cluster_mass = mZAMS.sum() # (args['num_bodies']) | units.MSun
@@ -306,7 +308,6 @@ if __name__ in ('__main__', '__plot__'):
     # plt.show()
     # exit()
     # set_standard scale to rescale it
-
     gravity = HybridGravity(direct_code=args['direct_code'],
                             tree_code=args['tree_code'],
                             mass_cut=args['mass_cut'] | units.MSun,

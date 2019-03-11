@@ -281,7 +281,7 @@ class HybridGravity(object):
                                                                        "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
                                                                        "Timestep_{}_EndTime_{}.hdf".format(self.input_args['direct_code'],
                                                                                                          self.input_args['tree_code'],
-                                                                                                         self.combined_gravity.particles.mass.sum(),
+                                                                                                         self.combined_gravity.particles.mass.sum().value_in(units.MSun),
                                                                                                          self.input_args['virial_radius'],
                                                                                                          self.input_args['mass_cut'],
                                                                                                          str(self.input_args['flip_split']),
@@ -292,7 +292,7 @@ class HybridGravity(object):
                                             "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
                                             "Timestep_{}_EndTime_{}.p".format(self.input_args['direct_code'],
                                                                               self.input_args['tree_code'],
-                                                                              self.combined_gravity.particles.mass.sum(),
+                                                                              self.combined_gravity.particles.mass.sum().value_in(units.MSun),
                                                                               self.input_args['virial_radius'],
                                                                               self.input_args['mass_cut'],
                                                                               str(self.input_args['flip_split']),
