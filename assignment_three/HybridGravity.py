@@ -275,9 +275,30 @@ class HybridGravity(object):
             if sim_time >= timestep_check:
                 if self.input_args is None:
                     write_set_to_file(self.combined_gravity.particles, "Sim_N_{}_MC_{}_W_{}.hdf".format(len(self.combined_gravity.particles), self.mass_cut, self.num_workers), "amuse")
+                    self.save_model_history("Sim_N_{}_MC_{}_W_{}.p".format(len(self.combined_gravity.particles), self.mass_cut.value_in(units.MSun), self.num_workers), input_dict=self.input_args)
                 else:
-                    write_set_to_file(self.combined_gravity.particles, "Sim_N_{}_MC_{}_W_{}_DC_{}_TC_{}.hdf".format(len(self.combined_gravity.particles), self.mass_cut.value_in(units.MSun), self.num_workers, self.input_args['direct_code'], self.input_args['tree_code']), "amuse")
-                self.save_model_history("Sim_N_{}_MC_{}_W_{}.p".format(len(self.combined_gravity.particles), self.mass_cut, self.num_workers), input_dict=self.input_args)
+                    write_set_to_file(self.combined_gravity.particles, "Checkpoint_DC_{}_TC_{}_ClusterMass_{}_"
+                                                                       "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                                                                       "Timestep_{}_EndTime_{}.hdf".format(self.input_args['direct_code'],
+                                                                                                         self.input_args['tree_code'],
+                                                                                                         self.combined_gravity.particles.mass.sum(),
+                                                                                                         self.input_args['virial_radius'],
+                                                                                                         self.input_args['mass_cut'],
+                                                                                                         str(self.input_args['flip_split']),
+                                                                                                         self.input_args['num_bodies'],
+                                                                                                         self.input_args['timestep'],
+                                                                                                         self.input_args['end_time']), "amuse")
+                    self.save_model_history("Checkpoint_DC_{}_TC_{}_ClusterMass_{}_"
+                                            "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                                            "Timestep_{}_EndTime_{}.p".format(self.input_args['direct_code'],
+                                                                              self.input_args['tree_code'],
+                                                                              self.combined_gravity.particles.mass.sum(),
+                                                                              self.input_args['virial_radius'],
+                                                                              self.input_args['mass_cut'],
+                                                                              str(self.input_args['flip_split']),
+                                                                              self.input_args['num_bodies'],
+                                                                              self.input_args['timestep'],
+                                                                              self.input_args['end_time']), input_dict=self.input_args)
                 timestep_check += end_time / 10.
 
         if self.direct_code is not None:

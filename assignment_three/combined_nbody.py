@@ -341,6 +341,8 @@ if __name__ in ('__main__', '__plot__'):
     plt.plot(timestep_history, energy_history, label="Energy")
     plt.plot(timestep_history, half_mass_history, label="Half-Mass")
     plt.plot(timestep_history, core_radii_history, label="Core Radii")
+    plt.xlabel("Timestep")
+    plt.ylabel("Ratio Current/Initial")
     plt.title(
         "Histories: DC {} TC {} WallTime: {} s".format(args['direct_code'], args['tree_code'], np.round(gravity.elapsed_time, 3)))
     plt.legend(loc='best')
