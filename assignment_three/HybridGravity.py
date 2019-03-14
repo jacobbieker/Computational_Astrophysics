@@ -21,7 +21,7 @@ class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
                  convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None,
-                 stellar_evolution=False, method="mass"):
+                 stellar_evolution=False, method="mass", radius_multiple=1.):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -99,6 +99,7 @@ class HybridGravity(object):
             # So use both gravities
             self.combined_gravity = None
 
+        self.radius_multiple = radius_multiple
         self.mass_cut = mass_cut
         self.num_workers = number_of_workers
 
@@ -190,7 +191,7 @@ class HybridGravity(object):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= core_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*core_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -207,7 +208,7 @@ class HybridGravity(object):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= half_mass_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*half_mass_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -222,7 +223,7 @@ class HybridGravity(object):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= virial_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*virial_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:

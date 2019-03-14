@@ -198,8 +198,8 @@ def get_args():
                     help="Direct Code Integrator (ph4, Huayno, Hermite, or SmallN) or None")
     ap.add_argument("-tc", '--tree_code', required=False, default='bhtree', type=str,
                     help="Tree Code Integrator (BHTree, Bonsai, Octgrav etc.) or None")
-    ap.add_argument("-mc", '--mass_cut', required=False, default=6., type=float,
-                    help="Mass Cutoff for splitting bodies, in units MSun (default = 6.)")
+    ap.add_argument("-mc", '--mass_cut', required=False, default=1., type=float,
+                    help="Mass Cutoff for splitting bodies, in units MSun (default = 6.), if splitting by radius, set for what multiple of the radius to use")
     ap.add_argument("-f", "--flip_split", required=False, default=False, type=str2bool,
                     help="Flip the splitting procedure, if True, all particles above mass_cut are sent to the tree code"
                          " if False (default), all particles above mass_cut are sent to the direct code")
@@ -300,7 +300,7 @@ if __name__ in ('__main__', '__plot__'):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= core_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*core_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -317,7 +317,7 @@ if __name__ in ('__main__', '__plot__'):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= half_mass_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*half_mass_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -332,7 +332,7 @@ if __name__ in ('__main__', '__plot__'):
             for particle in particles:
                 if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
                         particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= virial_radius:
+                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*virial_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -371,7 +371,9 @@ if __name__ in ('__main__', '__plot__'):
                             tree_converter=tree_converter,
                             direct_converter=direct_converter,
                             number_of_workers=args['workers'],
-                            input_args=args)
+                            input_args=args,
+                            method=args['method'],
+                            radius_multiple=args['mass_cut'])
     gravity.add_particles(particles, method=args['method'])
 
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(
