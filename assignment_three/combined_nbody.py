@@ -211,6 +211,8 @@ def get_args():
                     help="Number of workers each gravity code should use.")
     ap.add_argument("-s", "--seed", required=False, default=5227, type=int,
                     help="Seed for random numbers")
+    ap.add_argument("-m", "--method", required=False, default="mass", type=str,
+                    help="Method of splitting particles, either by mass cut ('mass'), virial raidus ('virial_radius'), core radius ('core radius'), or half mass radius ('half_mass')")
 
     args_dict = vars(ap.parse_args())
 
@@ -318,7 +320,7 @@ if __name__ in ('__main__', '__plot__'):
                             direct_converter=direct_converter,
                             number_of_workers=args['workers'],
                             input_args=args)
-    gravity.add_particles(particles)
+    gravity.add_particles(particles, method=args['method'])
 
     timestep_history, mass_history, energy_history, half_mass_history, core_radii_history = gravity.evolve_model(
         args['end_time'] | units.Myr)

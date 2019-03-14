@@ -1,6 +1,6 @@
 from amuse.couple import bridge
 from amuse.units import units
-from amuse.datamodel import Particles
+from amuse.datamodel import Particles, particle_attributes
 from amuse.units import nbody_system
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
@@ -10,6 +10,7 @@ from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.io import write_set_to_file
+from amuse.community.seba.interface import SeBa
 
 import pickle
 import time
@@ -18,7 +19,8 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None):
+                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None,
+                 stellar_evolution=False, method="mass"):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -44,6 +46,7 @@ class HybridGravity(object):
         """
 
         self.input_args = input_args
+        self.method = method
 
         self.converter = convert_nbody
         if tree_converter is not None:
@@ -155,12 +158,12 @@ class HybridGravity(object):
                                                         unit_converter=self.converter)[0][0]
         return total_radius
 
-    def add_particles(self, particles, method='mass'):
+    def add_particles(self, particles, method="mass"):
         """
         Adds particles, splitting them up based on the mass_cut set
         :param particles: The Particles() object containing the particles to add
         """
-        if method == 'mass':
+        if method == "mass":
             if self.direct_code is None:
                 self.tree_particles.add_particles(particles)
 
@@ -179,10 +182,48 @@ class HybridGravity(object):
                             self.direct_particles.add_particle(particle)
                         else:
                             self.tree_particles.add_particle(particle)
-        elif method == 'radius':
-            raise NotImplementedError
-        elif method == 'half_mass':
-            raise NotImplementedError
+        elif method == "core_radius":
+            _, core_radius, _ = particles.densitycentre_coreradius_coredens(
+                unit_converter=self.converter)
+            for particle in particles:
+                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= core_radius:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
+        elif method == "half_mass":
+            half_mass_radius = \
+                particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
+                                                                unit_converter=self.converter)[0][0]
+            for particle in particles:
+                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= half_mass_radius:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
+        elif method == "virial_radius":
+            virial_radius = particles.virial_radius()
+            for particle in particles:
+                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= virial_radius:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
         else:
             raise NotImplementedError
 
