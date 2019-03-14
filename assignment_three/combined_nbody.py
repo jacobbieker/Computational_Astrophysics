@@ -37,6 +37,7 @@ def load_history_from_file(filename):
 
     return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators
 
+
 def calc_delta_energy(energies):
     """
     Given the format saved, get the energy change over time
@@ -47,9 +48,10 @@ def calc_delta_energy(energies):
     initial_energy = energies[0]
     delta_energy = []
     for energy in energies:
-        delta_energy.append((initial_energy - energy)/initial_energy)
+        delta_energy.append((initial_energy - energy) / initial_energy)
 
     return delta_energy
+
 
 def plot_outputs(only_direct_name, only_tree_name, combined_names):
     """
@@ -78,7 +80,6 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     for filename in combined_names:
         combined_datas.append(load_history_from_file(filename))
 
-
     # First is the energy error over time
     plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='r')
     plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', linestyle='dashed', c='b')
@@ -88,7 +89,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Relative Energy Error")
     plt.legend(loc='best')
-    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
 
     # Now the Half Mass and Core Radii Over time
     plt.plot(direct_data[0], direct_data[2], label='Direct Half Mass', c='r')
@@ -103,7 +105,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Half Mass and Core Radii")
     plt.legend(loc='best')
-    plt.savefig("Half_Mass_Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.savefig("Half_Mass_Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
 
     # Final Energy Error as function of the split
 
@@ -136,7 +139,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel("(E_init - E_final)/E_init")
     plt.title("Final Energy Error by Mass Cut")
     plt.legend(loc='best')
-    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
 
     # Wall Time vs Mass Cut
     final_walltime = []
@@ -253,10 +257,10 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
-    np.random.seed(args['seed']) # Set for reproducability
+    np.random.seed(args['seed'])  # Set for reproducability
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
-    cluster_mass = mZAMS.sum() # (args['num_bodies']) | units.MSun
+    cluster_mass = mZAMS.sum()  # (args['num_bodies']) | units.MSun
 
     print(np.sum(mZAMS))
     print(mZAMS.sum())
@@ -294,7 +298,9 @@ if __name__ in ('__main__', '__plot__'):
             _, core_radius, _ = particles.densitycentre_coreradius_coredens(
                 unit_converter=converter)
             for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= core_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= core_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -309,7 +315,9 @@ if __name__ in ('__main__', '__plot__'):
                 particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
                                           unit_converter=converter)[0][0]
             for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= half_mass_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= half_mass_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -322,7 +330,9 @@ if __name__ in ('__main__', '__plot__'):
         elif args['method'] == 'virial_radius':
             virial_radius = particles.virial_radius()
             for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= virial_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= virial_radius:
                     if args['flip_split']:
                         tree_particles.add_particle(particle)
                     else:
@@ -369,15 +379,16 @@ if __name__ in ('__main__', '__plot__'):
 
     gravity.save_model_history(output_file="History_DC_{}_TC_{}_ClusterMass_{}_"
                                            "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                                           "Timestep_{}_EndTime_{}.p".format(args['direct_code'],
-                                                                  args['tree_code'],
-                                                                  cluster_mass,
-                                                                  args['virial_radius'],
-                                                                  args['mass_cut'],
-                                                                  str(args['flip_split']),
-                                                                  args['num_bodies'],
-                                                                  args['timestep'],
-                                                                    args['end_time']),
+                                           "Timestep_{}_EndTime_{}_Method_{}.p".format(args['direct_code'],
+                                                                                       args['tree_code'],
+                                                                                       cluster_mass,
+                                                                                       args['virial_radius'],
+                                                                                       args['mass_cut'],
+                                                                                       str(args['flip_split']),
+                                                                                       args['num_bodies'],
+                                                                                       args['timestep'],
+                                                                                       args['end_time'],
+                                                                                       args['method']),
                                input_dict=args)
 
     print("Timestep length: {}".format(len(timestep_history)))
@@ -389,11 +400,12 @@ if __name__ in ('__main__', '__plot__'):
     plt.xlabel("Timestep")
     plt.ylabel("Ratio Current/Initial")
     plt.title(
-        "Histories: DC {} TC {} WallTime: {} s".format(args['direct_code'], args['tree_code'], np.round(gravity.elapsed_time, 3)))
+        "Histories: DC {} TC {} WallTime: {} s".format(args['direct_code'], args['tree_code'],
+                                                       np.round(gravity.elapsed_time, 3)))
     plt.legend(loc='best')
-    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}.png".format(
+    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}_Method_{}.png".format(
         args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'],
-        str(args['flip_split']), args['num_bodies'], args['timestep']))
+        str(args['flip_split']), args['num_bodies'], args['timestep'], args['method']))
     plt.cla()
 
     print(max(energy_history))
