@@ -11,6 +11,7 @@ from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.io import write_set_to_file
 from amuse.community.seba.interface import SeBa
+import numpy as np
 
 import pickle
 import time
@@ -186,7 +187,7 @@ class HybridGravity(object):
             _, core_radius, _ = particles.densitycentre_coreradius_coredens(
                 unit_converter=self.converter)
             for particle in particles:
-                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= core_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= core_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -201,7 +202,7 @@ class HybridGravity(object):
                 particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
                                                                 unit_converter=self.converter)[0][0]
             for particle in particles:
-                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= half_mass_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= half_mass_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -214,7 +215,7 @@ class HybridGravity(object):
         elif method == "virial_radius":
             virial_radius = particles.virial_radius()
             for particle in particles:
-                if (particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2 <= virial_radius:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= virial_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -367,6 +368,7 @@ class HybridGravity(object):
                              "half_mass_history": self.half_mass_history,
                              "core_radius_history": self.core_radii_history,
                              "mass_cut": self.mass_cut,
+                             "method": self.method,
                              "flip_split": self.flip_split,
                              "timestep": self.timestep,
                              "wall_time": self.walltime_history,

@@ -278,18 +278,60 @@ if __name__ in ('__main__', '__plot__'):
     tree_converter = None
     direct_converter = None
     if args['tree_code'] is not None and args['direct_code'] is not None:
-        for particle in particles:
-            if particle.mass >= args['mass_cut'] | units.MSun:
-                if args['flip_split']:
-                    tree_particles.add_particle(particle)
+        if args['method'] == 'mass':
+            for particle in particles:
+                if particle.mass >= args['mass_cut'] | units.MSun:
+                    if args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
                 else:
-                    direct_particles.add_particle(particle)
-            else:
-                if args['flip_split']:
-                    direct_particles.add_particle(particle)
+                    if args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif args['method'] == 'core_radius':
+            _, core_radius, _ = particles.densitycentre_coreradius_coredens(
+                unit_converter=converter)
+            for particle in particles:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= core_radius:
+                    if args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
                 else:
-                    tree_particles.add_particle(particle)
-
+                    if args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif args['method'] == 'half_mass':
+            half_mass_radius = \
+                particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
+                                          unit_converter=converter)[0][0]
+            for particle in particles:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= half_mass_radius:
+                    if args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif args['method'] == 'virial_radius':
+            virial_radius = particles.virial_radius()
+            for particle in particles:
+                if np.sqrt((particle.x - particles.center_of_mass().x)**2 + (particle.y - particles.center_of_mass().y)**2 + (particle.z - particles.center_of_mass().z)**2) <= virial_radius:
+                    if args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
         if args['tree_code'] is not None:
             tree_converter = nbody_system.nbody_to_si(tree_particles.mass.sum(), tree_particles.virial_radius())
         if args['direct_code'] is not None:
