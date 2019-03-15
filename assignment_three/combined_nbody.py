@@ -142,27 +142,28 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     flipped_final_error = []
     flipped_done_splits = []
 
-    final_error.append(calc_delta_energy([direct_data[1][-1]]))
-    final_error.append(calc_delta_energy([tree_data[1][-1]]))
+    final_error.append((direct_data[1][0] - direct_data[1][-1])/direct_data[1][0])
+    final_error.append((tree_data[1][0] - tree_data[1][-1])/tree_data[1][0])
     done_splits.append(1.0)
     done_splits.append(0.0)
 
-    flipped_final_error.append(calc_delta_energy([direct_data[1][-1]]))
-    flipped_final_error.append(calc_delta_energy([tree_data[1][-1]]))
+    flipped_final_error.append((direct_data[1][0] - direct_data[1][-1])/direct_data[1][0])
+    flipped_final_error.append((tree_data[1][0] - tree_data[1][-1])/tree_data[1][0])
     flipped_done_splits.append(0.0)
     flipped_done_splits.append(1.0)
     for combined_data in combined_datas:
+        print((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
         if not combined_data[5]:
-            final_error.append(calc_delta_energy([combined_data[1][-1]]))
-            done_splits.append(combined_data[3])
+            final_error.append((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
+            done_splits.append(combined_data[4])
         else:
-            flipped_final_error.append(calc_delta_energy([combined_data[1][-1]]))
-            flipped_done_splits.append(combined_data[3])
+            flipped_final_error.append((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
+            flipped_done_splits.append(combined_data[4])
     #print(flipped_done_splits)
     #print(flipped_final_error)
     flipped_final_error = np.asarray(flipped_final_error)
-    plt.plot(done_splits, final_error, label='Direct >= Cut', c='r')
-    plt.plot(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
+    plt.scatter(done_splits, final_error, label='Direct >= Cut', c='r')
+    plt.scatter(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
     plt.xlabel("Mass Split (MSun)")
     plt.ylabel("(E_init - E_final)/E_init")
     plt.title("Final Energy Error by Mass Cut")
@@ -170,6 +171,7 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
     plt.show()
     plt.cla()
+
 
     # Wall Time vs Mass Cut
     final_walltime = []
@@ -188,14 +190,14 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     flipped_mass_cut_list.append(1.0)
     for combined_data in combined_datas:
         if not combined_data[5]:
-            final_walltime.append([combined_data[6]])
-            mass_cut_list.append(combined_data[3])
+            final_walltime.append(combined_data[6])
+            mass_cut_list.append(combined_data[4])
         else:
             flipped_final_walltime.append(combined_data[6])
-            flipped_mass_cut_list.append(combined_data[3])
+            flipped_mass_cut_list.append(combined_data[4])
 
-    plt.plot(mass_cut_list, final_walltime, label='Direct >= Cut', c='r')
-    plt.plot(flipped_mass_cut_list, flipped_final_walltime, label='Tree >= Cut', c='b')
+    plt.scatter(mass_cut_list, final_walltime, label='Direct >= Cut', c='r')
+    plt.scatter(flipped_mass_cut_list, flipped_final_walltime, label='Tree >= Cut', c='b')
     plt.xlabel("Mass Split (MSun)")
     plt.ylabel("Walltime (sec)")
     plt.title("Walltime vs Mass Split")
@@ -285,9 +287,19 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
     plt.savefig("Scaling_Cluster.png")
     plt.cla()
 
+import glob
+mixed_ph4_bhtree = []
+for file in glob.glob("STRW_Comp/*.p"):
+    mixed_ph4_bhtree.append(file)
+
+bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+
+plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
+    '''
     np.random.seed(args['seed'])  # Set for reproducability
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
@@ -443,3 +455,4 @@ if __name__ in ('__main__', '__plot__'):
 
     print(max(energy_history))
     print(min(energy_history))
+    '''
