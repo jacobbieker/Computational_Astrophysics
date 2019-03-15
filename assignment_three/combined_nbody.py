@@ -27,16 +27,26 @@ def load_history_from_file(filename):
     except KeyError:
         walltime = dict_data['wall_time']
 
-    timesteps = dict_data['timestep_history'] * 0.1
-    energies = dict_data['energy_history']
-    half_mass = dict_data['half_mass_history']
-    core_radii = dict_data['core_radius_history']
-    mass_cut = dict_data['mass_cut'].value_in(units.MSun)
-    flip_split = dict_data['flip_split']
+    timesteps = np.asarray(dict_data['timestep_history']) * 0.1
+    energies = np.asarray(dict_data['energy_history'])
+    half_mass = np.asarray( dict_data['half_mass_history'])
+    core_radii = np.asarray(dict_data['core_radius_history'])
+    #To fix the units
+
+    for i in range(len(half_mass)):
+        half_mass[i] = half_mass[i].value_in(units.parsec)
+        core_radii[i] = core_radii[i].value_in(units.parsec)
+
+
+    mass_cut = np.asarray(dict_data['mass_cut'].value_in(units.MSun))
+    flip_split = np.asarray(dict_data['flip_split'])
     integrators = (input_args['direct_code'], input_args['tree_code'])
+    timesteps = np.asarray(timesteps)*10
+    energies = np.asarray(energies)
+    half_mass = np.asarray(half_mass)
+    core_radii = np.asarray(core_radii)
 
     return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators
-
 
 def calc_delta_energy(energies):
     """
@@ -48,10 +58,9 @@ def calc_delta_energy(energies):
     initial_energy = energies[0]
     delta_energy = []
     for energy in energies:
-        delta_energy.append((initial_energy - energy) / initial_energy)
+        delta_energy.append((initial_energy - energy)/initial_energy)
 
     return delta_energy
-
 
 def plot_outputs(only_direct_name, only_tree_name, combined_names):
     """
@@ -80,6 +89,7 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     for filename in combined_names:
         combined_datas.append(load_history_from_file(filename))
 
+
     # First is the energy error over time
     plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='r')
     plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', linestyle='dashed', c='b')
@@ -88,25 +98,41 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel('(E_init - E_curr)/E_init')
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Relative Energy Error")
-    plt.legend(loc='best')
-    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
-                dpi=300)
+    #plt.legend(loc='best')
+    plt.xlim(0,10)
+    plt.ylim(-0.25,1)
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
 
     # Now the Half Mass and Core Radii Over time
     plt.plot(direct_data[0], direct_data[2], label='Direct Half Mass', c='r')
     plt.plot(tree_data[0], tree_data[2], label='Tree Half Mass', linestyle='dashed', c='r')
     for combined_data in combined_datas:
         plt.plot(combined_data[0], combined_data[2], label='Cut: {} Half Mass'.format(combined_data[4]))
+    plt.ylabel('Value (parsecs)')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Half Mass")
+    #plt.legend(loc='best')
+    plt.xlim(0,10)
+    plt.ylim(-0.25,5)
+    plt.savefig("Half_Mass_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
+
     plt.plot(direct_data[0], direct_data[3], label='Direct Core Radii', c='b')
     plt.plot(tree_data[0], tree_data[3], label='Tree Core Radii', linestyle='dashed', c='b')
     for combined_data in combined_datas:
         plt.plot(combined_data[0], combined_data[3], label='Cut: {} Core Radii'.format(combined_data[4]))
     plt.ylabel('Value (parsecs)')
     plt.xlabel('Simulation Time [Myr]')
-    plt.title("Half Mass and Core Radii")
-    plt.legend(loc='best')
-    plt.savefig("Half_Mass_Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
-                dpi=300)
+    plt.title("Core Radii")
+    #plt.legend(loc='best')
+    plt.xlim(0,10)
+    plt.ylim(-0.5,3)
+    plt.savefig("Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
 
     # Final Energy Error as function of the split
 
@@ -132,15 +158,18 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
         else:
             flipped_final_error.append(calc_delta_energy([combined_data[1][-1]]))
             flipped_done_splits.append(combined_data[3])
-
+    #print(flipped_done_splits)
+    #print(flipped_final_error)
+    flipped_final_error = np.asarray(flipped_final_error)
     plt.plot(done_splits, final_error, label='Direct >= Cut', c='r')
     plt.plot(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
     plt.xlabel("Mass Split (MSun)")
     plt.ylabel("(E_init - E_final)/E_init")
     plt.title("Final Energy Error by Mass Cut")
     plt.legend(loc='best')
-    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
-                dpi=300)
+    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
 
     # Wall Time vs Mass Cut
     final_walltime = []
@@ -172,6 +201,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.title("Walltime vs Mass Split")
     plt.legend(loc='best')
     plt.savefig("Mass_Split_Walltime_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
 
     return NotImplementedError
 

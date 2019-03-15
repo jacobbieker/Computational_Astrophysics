@@ -23,7 +23,7 @@ class HybridGravity(object):
                  convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None,
                  stellar_evolution=False, method="mass", radius_multiple=1.):
         """
-        This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
+                This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
         with the particles split into two different populations by the mass cut.
 
@@ -43,7 +43,13 @@ class HybridGravity(object):
         :param flip_split: Whether to flip how the split works, so that the stars more massive than the mass cutoff are sent to
         the tree_code instead of the direct_code. Defaults to False.
         :param convert_nbody: The converter to use if needed to convert the nbody units to physical units, defaults to None
-
+        :param number_of_workers:
+        :param tree_converter:
+        :param direct_converter:
+        :param input_args:
+        :param stellar_evolution:
+        :param method:
+        :param radius_multiple:
         """
 
         self.input_args = input_args
