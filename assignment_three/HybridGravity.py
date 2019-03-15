@@ -1,6 +1,6 @@
 from amuse.couple import bridge
 from amuse.units import units
-from amuse.datamodel import Particles
+from amuse.datamodel import Particles, particle_attributes
 from amuse.units import nbody_system
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
@@ -10,7 +10,8 @@ from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.io import write_set_to_file
-from amuse.io import read_set_from_file
+from amuse.community.seba.interface import SeBa
+import numpy as np
 
 import pickle
 import time
@@ -19,7 +20,8 @@ import time
 class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
-                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None):
+                 convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None,
+                 stellar_evolution=False, method="mass", radius_multiple=1.):
         """
         This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
@@ -45,6 +47,7 @@ class HybridGravity(object):
         """
 
         self.input_args = input_args
+        self.method = method
 
         self.converter = convert_nbody
         if tree_converter is not None:
@@ -96,6 +99,7 @@ class HybridGravity(object):
             # So use both gravities
             self.combined_gravity = None
 
+        self.radius_multiple = radius_multiple
         self.mass_cut = mass_cut
         self.num_workers = number_of_workers
 
@@ -133,7 +137,7 @@ class HybridGravity(object):
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge.Bridge(use_threading=True)
-        self.combined_gravity.timestep = 0.1*self.timestep | units.Myr
+        self.combined_gravity.timestep = 0.1 * self.timestep | units.Myr
         self.combined_gravity.add_system(self.tree_code, (self.direct_code,))
         self.combined_gravity.add_system(self.direct_code, (self.tree_code,))
 
@@ -152,25 +156,42 @@ class HybridGravity(object):
         :return:
         """
         total_radius = \
-        self.combined_gravity.particles.LagrangianRadii(mf=[0.5], cm=self.combined_gravity.particles.center_of_mass(),
-                                                        unit_converter=self.converter)[0][0]
+            self.combined_gravity.particles.LagrangianRadii(mf=[0.5],
+                                                            cm=self.combined_gravity.particles.center_of_mass(),
+                                                            unit_converter=self.converter)[0][0]
         return total_radius
 
-    def add_particles(self, particles):
+    def add_particles(self, particles, method="mass"):
         """
         Adds particles, splitting them up based on the mass_cut set
         :param particles: The Particles() object containing the particles to add
         """
+        if method == "mass":
+            if self.direct_code is None:
+                self.tree_particles.add_particles(particles)
 
-        if self.direct_code is None:
-            self.tree_particles.add_particles(particles)
-
-        elif self.tree_code is None:
-            self.direct_particles.add_particles(particles)
-        else:
-            # Need to split based on the mass cut
+            elif self.tree_code is None:
+                self.direct_particles.add_particles(particles)
+            else:
+                # Need to split based on the mass cut
+                for particle in particles:
+                    if particle.mass >= self.mass_cut:
+                        if self.flip_split:
+                            self.tree_particles.add_particle(particle)
+                        else:
+                            self.direct_particles.add_particle(particle)
+                    else:
+                        if self.flip_split:
+                            self.direct_particles.add_particle(particle)
+                        else:
+                            self.tree_particles.add_particle(particle)
+        elif method == "core_radius":
+            _, core_radius, _ = particles.densitycentre_coreradius_coredens(
+                unit_converter=self.converter)
             for particle in particles:
-                if particle.mass >= self.mass_cut:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*core_radius:
                     if self.flip_split:
                         self.tree_particles.add_particle(particle)
                     else:
@@ -180,6 +201,40 @@ class HybridGravity(object):
                         self.direct_particles.add_particle(particle)
                     else:
                         self.tree_particles.add_particle(particle)
+        elif method == "half_mass":
+            half_mass_radius = \
+                particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
+                                          unit_converter=self.converter)[0][0]
+            for particle in particles:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*half_mass_radius:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
+        elif method == "virial_radius":
+            virial_radius = particles.virial_radius()
+            for particle in particles:
+                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
+                        particle.y - particles.center_of_mass().y) ** 2 + (
+                                   particle.z - particles.center_of_mass().z) ** 2) <= self.radius_multiple*virial_radius:
+                    if self.flip_split:
+                        self.tree_particles.add_particle(particle)
+                    else:
+                        self.direct_particles.add_particle(particle)
+                else:
+                    if self.flip_split:
+                        self.direct_particles.add_particle(particle)
+                    else:
+                        self.tree_particles.add_particle(particle)
+        else:
+            raise NotImplementedError
 
         if self.direct_code is None:
             self.add_particles_to_tree(self.tree_particles)
@@ -235,7 +290,9 @@ class HybridGravity(object):
         self.half_mass_history.append(self.get_half_mass())
         self.energy_history.append(self.get_total_energy())
 
-        self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
+        self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec),
+                                        self.combined_gravity.particles.y.value_in(units.parsec),
+                                        self.combined_gravity.particles.z.value_in(units.parsec)))
         self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
         self.walltime_history.append(self.elapsed_time)
@@ -264,41 +321,55 @@ class HybridGravity(object):
             self.core_radii_history.append(self.get_core_radius())
             self.half_mass_history.append(self.get_half_mass())
             self.energy_history.append(self.get_total_energy())
-            self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec), self.combined_gravity.particles.y.value_in(units.parsec), self.combined_gravity.particles.z.value_in(units.parsec)))
+            self.combined_locations.append((self.combined_gravity.particles.x.value_in(units.parsec),
+                                            self.combined_gravity.particles.y.value_in(units.parsec),
+                                            self.combined_gravity.particles.z.value_in(units.parsec)))
             self.particle_masses.append(self.combined_gravity.particles.mass.value_in(units.MSun))
 
             end_step_time = time.time()
 
             self.elapsed_time += end_step_time - start_step_time
-            self.walltime_history.append(end_step_time - start_time) # Time used in step, summed up gives wall time
+            self.walltime_history.append(end_step_time - start_time)  # Time used in step, summed up gives wall time
             # Save model history as a checkpoint every tenth of the total simulation
             if sim_time >= timestep_check:
                 if self.input_args is None:
-                    write_set_to_file(self.combined_gravity.particles, "Sim_N_{}_MC_{}_W_{}.hdf".format(len(self.combined_gravity.particles), self.mass_cut, self.num_workers), "amuse")
-                    self.save_model_history("Sim_N_{}_MC_{}_W_{}.p".format(len(self.combined_gravity.particles), self.mass_cut.value_in(units.MSun), self.num_workers), input_dict=self.input_args)
+                    write_set_to_file(self.combined_gravity.particles,
+                                      "Sim_N_{}_MC_{}_W_{}.hdf".format(len(self.combined_gravity.particles),
+                                                                       self.mass_cut, self.num_workers), "amuse")
+                    self.save_model_history("Sim_N_{}_MC_{}_W_{}.p".format(len(self.combined_gravity.particles),
+                                                                           self.mass_cut.value_in(units.MSun),
+                                                                           self.num_workers),
+                                            input_dict=self.input_args)
                 else:
                     write_set_to_file(self.combined_gravity.particles, "Checkpoint_DC_{}_TC_{}_ClusterMass_{}_"
                                                                        "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                                                                       "Timestep_{}_EndTime_{}.hdf".format(self.input_args['direct_code'],
-                                                                                                         self.input_args['tree_code'],
-                                                                                                         self.combined_gravity.particles.mass.sum().value_in(units.MSun),
-                                                                                                         self.input_args['virial_radius'],
-                                                                                                         self.input_args['mass_cut'],
-                                                                                                         str(self.input_args['flip_split']),
-                                                                                                         self.input_args['num_bodies'],
-                                                                                                         self.input_args['timestep'],
-                                                                                                         self.input_args['end_time']), "amuse")
+                                                                       "Timestep_{}_EndTime_{}_Method_{}.hdf".format(
+                        self.input_args['direct_code'],
+                        self.input_args['tree_code'],
+                        self.combined_gravity.particles.mass.sum().value_in(units.MSun),
+                        self.input_args['virial_radius'],
+                        self.input_args['mass_cut'],
+                        str(self.input_args['flip_split']),
+                        self.input_args['num_bodies'],
+                        self.input_args['timestep'],
+                        self.input_args['end_time'],
+                        self.input_args['method']), "amuse")
                     self.save_model_history("Checkpoint_DC_{}_TC_{}_ClusterMass_{}_"
                                             "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                                            "Timestep_{}_EndTime_{}.p".format(self.input_args['direct_code'],
-                                                                              self.input_args['tree_code'],
-                                                                              self.combined_gravity.particles.mass.sum().value_in(units.MSun),
-                                                                              self.input_args['virial_radius'],
-                                                                              self.input_args['mass_cut'],
-                                                                              str(self.input_args['flip_split']),
-                                                                              self.input_args['num_bodies'],
-                                                                              self.input_args['timestep'],
-                                                                              self.input_args['end_time']), input_dict=self.input_args)
+                                            "Timestep_{}_EndTime_{}_Method_{}.p".format(self.input_args['direct_code'],
+                                                                                        self.input_args['tree_code'],
+                                                                                        self.combined_gravity.particles.mass.sum().value_in(
+                                                                                            units.MSun),
+                                                                                        self.input_args[
+                                                                                            'virial_radius'],
+                                                                                        self.input_args['mass_cut'],
+                                                                                        str(self.input_args[
+                                                                                                'flip_split']),
+                                                                                        self.input_args['num_bodies'],
+                                                                                        self.input_args['timestep'],
+                                                                                        self.input_args['end_time'],
+                                                                                        self.input_args['method']),
+                                            input_dict=self.input_args)
                 timestep_check += end_time / 10.
 
         if self.direct_code is not None:
@@ -321,6 +392,7 @@ class HybridGravity(object):
                              "half_mass_history": self.half_mass_history,
                              "core_radius_history": self.core_radii_history,
                              "mass_cut": self.mass_cut,
+                             "method": self.method,
                              "flip_split": self.flip_split,
                              "timestep": self.timestep,
                              "wall_time": self.walltime_history,
@@ -329,7 +401,7 @@ class HybridGravity(object):
                              "num_tree": len(self.tree_particles),
                              "particle_history": self.particle_masses,
                              "combined_particles_locations": self.combined_locations,
-                            }
+                             }
 
         return model_information
 
@@ -347,7 +419,6 @@ class HybridGravity(object):
 
         with open(output_file, "wb") as pickle_file:
             pickle.dump(model_dict, pickle_file)
-
 
     def add_particles_to_direct(self, particles):
         """
