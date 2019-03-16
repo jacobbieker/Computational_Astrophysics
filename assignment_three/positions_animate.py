@@ -10,10 +10,7 @@ from amuse.units import units
 # no mass seperation yet since it isn't relevant until the bridge is right and the converter is correct
 
 filenames = [
-    "JBieker_Laptop/History_DC_ph4_TC_None_ClusterMass_132.12625693121714 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_100_Timestep_0.1.p",
-    "JBieker_Laptop/History_DC_None_TC_bhtree_ClusterMass_65.21805817083936 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_100_Timestep_0.1.p",
-    "JBieker_Laptop/History_DC_None_TC_bhtree_ClusterMass_100000.0 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1.p",
-    "/home/jacob/Development/comp_astro/assignment_three/History_DC_hermite_TC_bhtree_ClusterMass_800.0 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_1000_Timestep_0.1.p"]
+    "History_DC_None_TC_bhtree_ClusterMass_6958.0653862278095 MSun_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p"]
 
 
 def convert_from_pickle(filename):
@@ -31,34 +28,18 @@ def convert_from_pickle(filename):
         ydata.append(list[1])
         zdata.append(list[2])
 
-    core_radii_data = dict_data['core_radius_history']
-    half_mass_data = dict_data['half_mass_history']
+    # Now it is a list of lists each, each sblist being the positions at that timestep
+    # So make each a numpy array of arrays
+    # This then means each df thing should be an array of them
+    xdata = np.asarray(xdata)
+    ydata = np.asarray(ydata)
+    zdata = np.asarray(zdata)
     num_timesteps = len(xdata)
 
     # Create a Pandas dataframe to store the locations accessing by arbitaray variable time so all the x,y,z locations for all stars for the first time step have the t = 0.0  and next time step t=1.0
     t = np.array([np.ones(len(xdata[0])) * i for i in range(len(xdata))]).flatten()
-    df = pd.DataFrame()
-    df["x"] = ""
-    df["y"] = ""
-    df["z"] = ""
-    df['core_radii'] = ""
-    df['half_mass'] = ""
 
-    # Definitely not the most effcient way but it is working
-
-    for j in range(len(xdata)):
-        xlist = xdata[j]
-        ylist = ydata[j]
-        zlist = zdata[j]
-        core_r_list = core_radii_data[j]
-        half_mass_list = half_mass_data[j]
-        for i in range(len(xdata[0])):
-            df = df.append(
-                {'x': xlist[i], 'y': ylist[i], 'z': zlist[i], 'core_radius': core_r_list.value_in(units.parsec),
-                 'half_mass': half_mass_list.value_in(units.parsec)}, ignore_index=True)
-    df["time"] = t
-
-    return df, input_args, num_timesteps
+    return xdata, ydata, zdata, input_args, num_timesteps
 
 
 def create_2d_animation(df, input_args, num_timesteps, axlims=None, add_extra=None):
@@ -96,13 +77,12 @@ def create_2d_animation(df, input_args, num_timesteps, axlims=None, add_extra=No
     # All of them
 
     data = df[df['time'] == 0]
-    core_radius_circle = plt.Circle((0,0), df[df['time']==0]['core_radius'][0], color='r', fill=False, label='virial_radius')
     ax1.scatter(data.x, data.y)
 
     ax2.scatter(data.y, data.z)
     ax3.scatter(data.x, data.z)
 
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection='3d', figsize=(30,20))
     ax.set_zlabel("Z [parsec]")
     ax.set_xlabel("X [parsec]")
     ax.set_ylabel("Y [parsec]")
@@ -150,7 +130,7 @@ def create_2d_animation(df, input_args, num_timesteps, axlims=None, add_extra=No
     plt.cla()
 
 
-def create_3d_animation(df, input_args, num_timesteps, axlims=None, add_extra=None):
+def create_3d_animation(xdata, ydata, zdata, input_args, num_timesteps, axlims=None):
     """
     Create the animation of the stars over time, optionally with limits
     :param dataframe:
@@ -169,18 +149,38 @@ def create_3d_animation(df, input_args, num_timesteps, axlims=None, add_extra=No
         :param num: The number in the sequence to use
         """
         # Update all the stars
-        data = df[df['time'] == num]
-        graph._offsets3d = (data.x, data.y, data.z)  # Have to do this for the
-        title.set_text('3D DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
+        datax = xdata[num]
+        datay = ydata[num]
+        dataz = zdata[num]
+        graph._offsets3d = (datax, datay, dataz)  # Have to do this for the
+        graph2._offsets3d = (datax, datay, dataz)
+        graph3._offsets3d = (datax, datay, dataz)
+        graph4._offsets3d = (datax, datay, dataz)
+        fig.suptitle('3D DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
                                                                   input_args['tree_code'],
                                                                   np.round(num * 0.1, 2)))
-        return title, graph
+        return graph, graph2, graph3, graph4
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(141, projection='3d')
+    ax2 = fig.add_subplot(142, projection='3d')
+    ax2.view_init(elev=0, azim=0)
+    ax3 = fig.add_subplot(143, projection='3d')
+    ax3.view_init(elev=0, azim=90)
+    ax4 = fig.add_subplot(144, projection='3d')
+    ax4.view_init(elev=90, azim=0)
     ax.set_zlabel("Z [parsec]")
     ax.set_xlabel("X [parsec]")
     ax.set_ylabel("Y [parsec]")
+    ax2.set_zlabel("Z [parsec]")
+    ax2.set_xlabel("X [parsec]")
+    ax2.set_ylabel("Y [parsec]")
+    ax3.set_zlabel("Z [parsec]")
+    ax3.set_xlabel("X [parsec]")
+    ax3.set_ylabel("Y [parsec]")
+    ax4.set_zlabel("Z [parsec]")
+    ax4.set_xlabel("X [parsec]")
+    ax4.set_ylabel("Y [parsec]")
 
     if axlims is not None:
         if isinstance(axlims[0], list):
@@ -191,12 +191,14 @@ def create_3d_animation(df, input_args, num_timesteps, axlims=None, add_extra=No
             ax.set_xlim3d(axlims)
             ax.set_ylim3d(axlims)
             ax.set_zlim3d(axlims)
-    title = ax.set_title('3D DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
-                                                                    input_args['tree_code'],
-                                                                    0))
 
-    data = df[df['time'] == 0]
-    graph = ax.scatter(data.x, data.y, data.z)
+    datax = xdata[0]
+    datay = ydata[0]
+    dataz = zdata[0]
+    graph = ax.scatter(datax, datay, dataz)
+    graph2 = ax2.scatter(datax, datay, dataz)
+    graph3 = ax3.scatter(datax, datay, dataz)
+    graph4 = ax4.scatter(datax, datay, dataz)
 
     ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
 
@@ -226,6 +228,5 @@ def create_3d_animation(df, input_args, num_timesteps, axlims=None, add_extra=No
 
 
 for filename in filenames:
-    df, input_args, num_timesteps = convert_from_pickle(filename)
-    create_3d_animation(df, input_args, num_timesteps, add_extra='core_radius')
-    create_3d_animation(df, input_args, num_timesteps, axlims=([-3., 3.], [-3., 3.], [-3., 3.]))
+    datax, datay, dataz, input_args, num_timesteps = convert_from_pickle(filename)
+    create_3d_animation(datax, datay, dataz, input_args, num_timesteps)
