@@ -21,9 +21,9 @@ class HybridGravity(object):
 
     def __init__(self, direct_code=ph4, tree_code=BHTree, mass_cut=6. | units.MSun, timestep=0.1, flip_split=False,
                  convert_nbody=None, number_of_workers=1, tree_converter=None, direct_converter=None, input_args=None,
-                 stellar_evolution=False, method="mass", radius_multiple=1.):
+                 method="mass", radius_multiple=1.):
         """
-                This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
+        This is the initialization for the HybridGravity solver. For the most flexibility, as well as to allow this one
         class to fulfill the requirements of the assignment, it is able to be run with a single gravity solver, or two gravity solvers
         with the particles split into two different populations by the mass cut.
 
@@ -43,13 +43,13 @@ class HybridGravity(object):
         :param flip_split: Whether to flip how the split works, so that the stars more massive than the mass cutoff are sent to
         the tree_code instead of the direct_code. Defaults to False.
         :param convert_nbody: The converter to use if needed to convert the nbody units to physical units, defaults to None
-        :param number_of_workers:
-        :param tree_converter:
-        :param direct_converter:
-        :param input_args:
-        :param stellar_evolution:
-        :param method:
-        :param radius_multiple:
+        :param number_of_workers: The number of worker threads to use. If using one gravity code, it is the total number of worker threads
+        If using two gravity codes, then the total number of worker threads is this number times 2.
+        :param tree_converter: The converter used for the tree code particles
+        :param direct_converter: The converter used for the direct code particles
+        :param input_args: The dictionary of input arguments from argparse
+        :param method: Method to use, one of "mass" (default), "virial_radius", "half_mass", or "core_radius"
+        :param radius_multiple: Only used when method is not "mass", sets what the radius is multiplied by to split the particles
         """
 
         self.input_args = input_args
@@ -140,6 +140,10 @@ class HybridGravity(object):
         self.elapsed_time = 0.0
 
     def _create_bridge(self):
+        """
+        Creates the Bridge, sets the Bridge timestep to one tenth of the timestep of HybridGravity
+        :return:
+        """
         # So use both gravities
         # Create the bridge for the two gravities
         self.combined_gravity = bridge.Bridge(use_threading=True)
@@ -150,7 +154,7 @@ class HybridGravity(object):
     def get_core_radius(self):
         """
         Returns the core-radius for the system
-        :return:
+        :return: Core radius
         """
         _, core_radius, _ = self.combined_gravity.particles.densitycentre_coreradius_coredens(
             unit_converter=self.converter)
@@ -159,7 +163,7 @@ class HybridGravity(object):
     def get_half_mass(self):
         """
         Returns the half-mass distance for the system
-        :return:
+        :return: Half mass radius
         """
         total_radius = \
             self.combined_gravity.particles.LagrangianRadii(mf=[0.5],
@@ -170,7 +174,10 @@ class HybridGravity(object):
     def add_particles(self, particles, method="mass"):
         """
         Adds particles, splitting them up based on the mass_cut set
+        Options include splitting by the mass (default) or by a multiple of the
+        virial radius, core radius, or half mass radius
         :param particles: The Particles() object containing the particles to add
+        :param method: Method to use, one of "mass", "virial_radius", "core_radius", or "half_mass"
         """
         if method == "mass":
             if self.direct_code is None:
@@ -269,10 +276,11 @@ class HybridGravity(object):
 
     def evolve_model(self, end_time, timestep_length=0.1 | units.Myr):
         """
-        Evolves the system until the end time, saving out information at set time intervals
+        Evolves the system until the end time, saving out information every timestep_length,
+        and saving out information at every tenth of the end time to a file
 
         :param end_tme: The end time of the simulation, with AMUSE units
-        :param number_of_steps: Number of steps to run for
+        :param timestep_length: Amount of simulation time between saving out information
         :return: Timestep history, mass history, energy history, half-mass history, and core-radii history
         all relative to the initial conditions
         """
@@ -414,8 +422,8 @@ class HybridGravity(object):
     def save_model_history(self, output_file, input_dict=None):
         """
         Saves out the model history and input options
-        :param output_file:
-        :param input_dict:
+        :param output_file: Name of the output file
+        :param input_dict: The dictionary returned from the argsparse
         """
 
         if input_dict is not None:

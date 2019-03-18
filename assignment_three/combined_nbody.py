@@ -27,26 +27,32 @@ def load_history_from_file(filename):
     except KeyError:
         walltime = dict_data['wall_time']
 
-    timesteps = np.asarray(dict_data['timestep_history']) * 0.1
-    energies = np.asarray(dict_data['energy_history'])
-    half_mass = np.asarray( dict_data['half_mass_history'])
-    core_radii = np.asarray(dict_data['core_radius_history'])
-    #To fix the units
+    fraction_tree = dict_data['num_tree']/(dict_data['num_direct'] + dict_data['num_tree'])
+
+
+    timesteps = np.asarray(dict_data['timestep_history'][0:102])
+    energies = np.asarray(dict_data['energy_history'][0:102])
+    half_mass = np.asarray(dict_data['half_mass_history'][0:102])
+    core_radii = np.asarray(dict_data['core_radius_history'][0:102])
+    # To fix the units
+    # Get the Walltime for 10 Myr by taking the total walltime, dividing by the number of steps in the list, then 102
+    walltime /= len(dict_data['timestep_history'])
+    walltime *= len(timesteps)
 
     for i in range(len(half_mass)):
         half_mass[i] = half_mass[i].value_in(units.parsec)
         core_radii[i] = core_radii[i].value_in(units.parsec)
 
-
     mass_cut = np.asarray(dict_data['mass_cut'].value_in(units.MSun))
     flip_split = np.asarray(dict_data['flip_split'])
     integrators = (input_args['direct_code'], input_args['tree_code'])
-    timesteps = np.asarray(timesteps)*10
+    timesteps = np.asarray(timesteps)
     energies = np.asarray(energies)
     half_mass = np.asarray(half_mass)
     core_radii = np.asarray(core_radii)
 
-    return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators
+    return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators, fraction_tree
+
 
 def calc_delta_energy(energies):
     """
@@ -58,9 +64,10 @@ def calc_delta_energy(energies):
     initial_energy = energies[0]
     delta_energy = []
     for energy in energies:
-        delta_energy.append((initial_energy - energy)/initial_energy)
+        delta_energy.append((initial_energy - energy) / initial_energy)
 
     return delta_energy
+
 
 def plot_outputs(only_direct_name, only_tree_name, combined_names):
     """
@@ -89,7 +96,6 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     for filename in combined_names:
         combined_datas.append(load_history_from_file(filename))
 
-
     # First is the energy error over time
     plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='r')
     plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', linestyle='dashed', c='b')
@@ -98,10 +104,11 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel('(E_init - E_curr)/E_init')
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Relative Energy Error")
-    #plt.legend(loc='best')
-    plt.xlim(0,10)
-    plt.ylim(-0.25,1)
-    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.legend(loc='best')
+    #plt.xlim(0, 10)
+    #plt.ylim(-0.25, 1)
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
     plt.show()
     plt.cla()
 
@@ -113,9 +120,9 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel('Value (parsecs)')
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Half Mass")
-    #plt.legend(loc='best')
-    plt.xlim(0,10)
-    plt.ylim(-0.25,5)
+    plt.legend(loc='best')
+    #plt.xlim(0, 10)
+    #plt.ylim(-0.25, 5)
     plt.savefig("Half_Mass_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
     plt.show()
     plt.cla()
@@ -127,9 +134,9 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel('Value (parsecs)')
     plt.xlabel('Simulation Time [Myr]')
     plt.title("Core Radii")
-    #plt.legend(loc='best')
-    plt.xlim(0,10)
-    plt.ylim(-0.5,3)
+    plt.legend(loc='best')
+    #plt.xlim(0, 10)
+    #plt.ylim(-0.5, 3)
     plt.savefig("Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
     plt.show()
     plt.cla()
@@ -142,25 +149,25 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     flipped_final_error = []
     flipped_done_splits = []
 
-    final_error.append((direct_data[1][0] - direct_data[1][-1])/direct_data[1][0])
-    final_error.append((tree_data[1][0] - tree_data[1][-1])/tree_data[1][0])
+    final_error.append((direct_data[1][0] - direct_data[1][-1]) / direct_data[1][0])
+    final_error.append((tree_data[1][0] - tree_data[1][-1]) / tree_data[1][0])
     done_splits.append(1.0)
     done_splits.append(0.0)
 
-    flipped_final_error.append((direct_data[1][0] - direct_data[1][-1])/direct_data[1][0])
-    flipped_final_error.append((tree_data[1][0] - tree_data[1][-1])/tree_data[1][0])
+    flipped_final_error.append((direct_data[1][0] - direct_data[1][-1]) / direct_data[1][0])
+    flipped_final_error.append((tree_data[1][0] - tree_data[1][-1]) / tree_data[1][0])
     flipped_done_splits.append(0.0)
     flipped_done_splits.append(1.0)
     for combined_data in combined_datas:
-        print((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
+        print((combined_data[1][0] - combined_data[1][-1]) / combined_data[1][0])
         if not combined_data[5]:
-            final_error.append((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
+            final_error.append((combined_data[1][0] - combined_data[1][-1]) / combined_data[1][0])
             done_splits.append(combined_data[4])
         else:
-            flipped_final_error.append((combined_data[1][0] - combined_data[1][-1])/combined_data[1][0])
+            flipped_final_error.append((combined_data[1][0] - combined_data[1][-1]) / combined_data[1][0])
             flipped_done_splits.append(combined_data[4])
-    #print(flipped_done_splits)
-    #print(flipped_final_error)
+    # print(flipped_done_splits)
+    # print(flipped_final_error)
     flipped_final_error = np.asarray(flipped_final_error)
     plt.scatter(done_splits, final_error, label='Direct >= Cut', c='r')
     plt.scatter(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
@@ -168,10 +175,10 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.ylabel("(E_init - E_final)/E_init")
     plt.title("Final Energy Error by Mass Cut")
     plt.legend(loc='best')
-    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
     plt.show()
     plt.cla()
-
 
     # Wall Time vs Mass Cut
     final_walltime = []
@@ -206,7 +213,139 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.show()
     plt.cla()
 
+    # Now Percentage by time ran
+    final_walltime = []
+    mass_cut_list = []
+
+    final_walltime.append(direct_data[6])
+    final_walltime.append(tree_data[6])
+    mass_cut_list.append(direct_data[8])
+    mass_cut_list.append(direct_data[8])
+
+    for combined_data in combined_datas:
+        final_walltime.append(combined_data[6])
+        mass_cut_list.append(combined_data[8])
+
+    plt.scatter(mass_cut_list, final_walltime, c='r')
+    plt.xlabel("Fraction of Particles in Tree Code")
+    plt.ylabel("Walltime (sec)")
+    plt.title("Walltime vs Fraction in Tree")
+    plt.savefig("Fractional_Walltime_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.show()
+    plt.cla()
+
+    # Now Final Energy Error by Percentage
+    final_error = []
+    done_splits = []
+
+    final_error.append((direct_data[1][0] - direct_data[1][-1]) / direct_data[1][0])
+    final_error.append((tree_data[1][0] - tree_data[1][-1]) / tree_data[1][0])
+    done_splits.append(direct_data[8])
+    done_splits.append(tree_data[8])
+
+    for combined_data in combined_datas:
+        print((combined_data[1][0] - combined_data[1][-1]) / combined_data[1][0])
+        final_error.append((combined_data[1][0] - combined_data[1][-1]) / combined_data[1][0])
+        done_splits.append(combined_data[8])
+    plt.scatter(done_splits, final_error, c='b')
+    plt.xlabel("Fraction of Particles in Tree Code")
+    plt.ylabel("(E_init - E_final)/E_init")
+    plt.title("Final Energy Error by Particle Fraction")
+    plt.savefig("Particle_Fraction_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
+    plt.show()
+    plt.cla()
+
     return NotImplementedError
+
+
+def make_converters(input_args, input_particles, all_converter):
+    """
+    Creates the tree and direct converters from the total set of particles
+    :param input_args: Input arguments from argparse
+    :param input_particles: Input set of particles to split
+    :param all_converter: The conveter for the whole set of particles
+    :return: tree_converter and direct_converter
+    """
+    # Now get the masses in each one for the different converters
+    direct_particles = Particles()
+    tree_particles = Particles()
+    tree_converter = None
+    direct_converter = None
+    if input_args['tree_code'] is not None and input_args['direct_code'] is not None:
+        if input_args['method'] == 'mass':
+            for particle in input_particles:
+                if particle.mass >= input_args['mass_cut'] | units.MSun:
+                    if input_args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if input_args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif input_args['method'] == 'core_radius':
+            _, core_radius, _ = input_particles.densitycentre_coreradius_coredens(
+                unit_converter=all_converter)
+            for particle in input_particles:
+                if np.sqrt((particle.x - input_particles.center_of_mass().x) ** 2 + (
+                        particle.y - input_particles.center_of_mass().y) ** 2 + (
+                                   particle.z - input_particles.center_of_mass().z) ** 2) <= input_args['mass_cut']\
+                        * core_radius:
+                    if input_args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if input_args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif input_args['method'] == 'half_mass':
+            half_mass_radius = \
+                input_particles.LagrangianRadii(mf=[0.5], cm=input_particles.center_of_mass(),
+                                                unit_converter=all_converter)[0][0]
+            for particle in input_particles:
+                if np.sqrt((particle.x - input_particles.center_of_mass().x) ** 2 + (
+                        particle.y - input_particles.center_of_mass().y) ** 2 + (
+                                   particle.z - input_particles.center_of_mass().z) ** 2) <= input_args['mass_cut']\
+                        * half_mass_radius:
+                    if input_args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if input_args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        elif input_args['method'] == 'virial_radius':
+            virial_radius = input_particles.virial_radius()
+            for particle in input_particles:
+                if np.sqrt((particle.x - input_particles.center_of_mass().x) ** 2 + (
+                        particle.y - input_particles.center_of_mass().y) ** 2 + (
+                                   particle.z - input_particles.center_of_mass().z) ** 2) <= input_args['mass_cut']\
+                        * virial_radius:
+                    if input_args['flip_split']:
+                        tree_particles.add_particle(particle)
+                    else:
+                        direct_particles.add_particle(particle)
+                else:
+                    if input_args['flip_split']:
+                        direct_particles.add_particle(particle)
+                    else:
+                        tree_particles.add_particle(particle)
+        if input_args['tree_code'] is not None:
+            tree_converter = nbody_system.nbody_to_si(tree_particles.mass.sum(), tree_particles.virial_radius())
+        if input_args['direct_code'] is not None:
+            direct_converter = nbody_system.nbody_to_si(direct_particles.mass.sum(), direct_particles.virial_radius())
+    else:
+        # No splitting, so all the converters are the same
+        tree_converter = all_converter
+        direct_converter = all_converter
+
+    return tree_converter, direct_converter
 
 
 def get_args():
@@ -287,17 +426,18 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
     plt.savefig("Scaling_Cluster.png")
     plt.cla()
 
-import glob
-mixed_ph4_bhtree = []
-for file in glob.glob("STRW_Comp/*.p"):
-    mixed_ph4_bhtree.append(file)
-
-#bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
-#ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
-
-#plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
 
 if __name__ in ('__main__', '__plot__'):
+    import glob
+
+    mixed_ph4_bhtree = []
+    for file in glob.glob("Base_Test/*.p"):
+        mixed_ph4_bhtree.append(file)
+    bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+    ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+
+    plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
+    exit()
     args = get_args()
     np.random.seed(args['seed'])  # Set for reproducability
     print(args)
@@ -315,95 +455,9 @@ if __name__ in ('__main__', '__plot__'):
     particles = new_plummer_model(args['num_bodies'], convert_nbody=converter)
     particles.mass = mZAMS
     particles.scale_to_standard(convert_nbody=converter)
+    tree_converter, direct_converter = make_converters(args, particles, converter)
 
-    print(particles.virial_radius().value_in(units.parsec))
-
-    # Now get the masses in each one for the different converters
-    direct_particles = Particles()
-    tree_particles = Particles()
-    tree_converter = None
-    direct_converter = None
-    if args['tree_code'] is not None and args['direct_code'] is not None:
-        if args['method'] == 'mass':
-            for particle in particles:
-                if particle.mass >= args['mass_cut'] | units.MSun:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        elif args['method'] == 'core_radius':
-            _, core_radius, _ = particles.densitycentre_coreradius_coredens(
-                unit_converter=converter)
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*core_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        elif args['method'] == 'half_mass':
-            half_mass_radius = \
-                particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
-                                          unit_converter=converter)[0][0]
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*half_mass_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        elif args['method'] == 'virial_radius':
-            virial_radius = particles.virial_radius()
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*virial_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        if args['tree_code'] is not None:
-            tree_converter = nbody_system.nbody_to_si(tree_particles.mass.sum(), tree_particles.virial_radius())
-        if args['direct_code'] is not None:
-            direct_converter = nbody_system.nbody_to_si(direct_particles.mass.sum(), direct_particles.virial_radius())
-        plot_sanity_checks(particles, direct_particles, tree_particles, mZAMS)
-        print(direct_particles.mass.sum().value_in(units.MSun))
-        print(tree_particles.mass.sum().value_in(units.MSun))
-        print(particles.mass.sum().value_in(units.MSun))
-        print(direct_particles.virial_radius().value_in(units.parsec))
-        print(tree_particles.virial_radius().value_in(units.parsec))
-        print(particles.virial_radius().value_in(units.parsec))
-    else:
-        # No splitting, so all the converters are the same
-        tree_converter = converter
-        direct_converter = converter
-        plot_sanity_checks(all_particles=particles, stellar_distribution=mZAMS)
-    # plt.plot(particles.x.value_in(units.parsec), particles.y.value_in(units.parsec))
-    # plt.show()
-    # exit()
-    # set_standard scale to rescale it
+    plot_sanity_checks(all_particles=particles, stellar_distribution=mZAMS)
     gravity = HybridGravity(direct_code=args['direct_code'],
                             tree_code=args['tree_code'],
                             mass_cut=args['mass_cut'] | units.MSun,
@@ -434,23 +488,3 @@ if __name__ in ('__main__', '__plot__'):
                                                                                        args['end_time'],
                                                                                        args['method']),
                                input_dict=args)
-
-    print("Timestep length: {}".format(len(timestep_history)))
-
-    plt.plot(timestep_history, mass_history, label="Mass")
-    plt.plot(timestep_history, energy_history, label="Energy")
-    plt.plot(timestep_history, half_mass_history, label="Half-Mass")
-    plt.plot(timestep_history, core_radii_history, label="Core Radii")
-    plt.xlabel("Timestep")
-    plt.ylabel("Ratio Current/Initial")
-    plt.title(
-        "Histories: DC {} TC {} WallTime: {} s".format(args['direct_code'], args['tree_code'],
-                                                       np.round(gravity.elapsed_time, 3)))
-    plt.legend(loc='best')
-    plt.savefig("History_DC_{}_TC_{}_ClusterMass_{}_Radius_{}_Cut_{}_Flip_{}_Stars_{}_Timestep_{}_Method_{}.png".format(
-        args['direct_code'], args['tree_code'], cluster_mass, args['virial_radius'], args['mass_cut'],
-        str(args['flip_split']), args['num_bodies'], args['timestep'], args['method']))
-    plt.cla()
-
-    print(max(energy_history))
-    print(min(energy_history))

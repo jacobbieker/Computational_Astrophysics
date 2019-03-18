@@ -395,5 +395,14 @@ true_positions = (datax, datay, dataz)
 # create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
 
 
-create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
-                false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
+try:
+    create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
+                    false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
+except:
+    try:
+        create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
+                    false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-10.,10.))
+    except:
+        create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
+                        false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-5.,5.))
+
