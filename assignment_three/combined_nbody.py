@@ -292,14 +292,13 @@ mixed_ph4_bhtree = []
 for file in glob.glob("STRW_Comp/*.p"):
     mixed_ph4_bhtree.append(file)
 
-bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
-ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+#bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+#ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
 
-plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
+#plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
 
 if __name__ in ('__main__', '__plot__'):
     args = get_args()
-    '''
     np.random.seed(args['seed'])  # Set for reproducability
     print(args)
     mZAMS = new_powerlaw_mass_distribution(args['num_bodies'], 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
@@ -455,4 +454,3 @@ if __name__ in ('__main__', '__plot__'):
 
     print(max(energy_history))
     print(min(energy_history))
-    '''

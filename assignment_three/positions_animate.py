@@ -97,18 +97,18 @@ def convert_from_pickle(filename):
             for particle in masses:
                 if particle >= cut.value_in(units.MSun):
                     if dict_data['flip_split']:
-                        colors.append(1)
+                        colors.append('b')
                     else:
-                        colors.append(0)
+                        colors.append('r')
                 else:
                     if dict_data['flip_split']:
-                        colors.append(0)
+                        colors.append('r')
                     else:
-                        colors.append(1)
+                        colors.append('b')
     elif input_args['tree_code'] is None and input_args['direct_code'] is not None:
-        colors = np.ones(len(scaling_list))
+        colors = np.asarray(['b' for i in range(len(scaling_list))])
     elif input_args['tree_code'] is not None and input_args['direct_code'] is None:
-        colors = np.zeros(len(scaling_list))
+        colors = np.asarray(['r' for i in range(len(scaling_list))])
 
         '''
         elif method == 'core_radius':
@@ -165,7 +165,7 @@ def convert_from_pickle(filename):
     return xdata, ydata, zdata, colors, input_args, num_timesteps, scaling_list
 
 
-def create_3d_animation_array(direct_positions, tree_positions, false_positions, true_positions, false_colors, true_colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
+def create_3d_animation_array(direct_positions, tree_positions, false_positions, true_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
     """
         Create the animation of the stars over time, optionally with limits
         Designed for seeing how flipping and direct and tree codes differ
@@ -310,6 +310,124 @@ def create_3d_animation_array(direct_positions, tree_positions, false_positions,
                                                    axlims), writer=writer)
     plt.cla()
     plt.close(fig)
+
+def create_3d_array(direct_positions, tree_positions, false_positions, true_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
+    """
+    This creates a 1 x 4 showing the different effects that the cuts have on the animation
+    :param direct_positions:
+    :param tree_positions:
+    :param false_positions:
+    :param true_positions:
+    :param false_colors:
+    :param true_colors:
+    :param input_args:
+    :param num_timesteps:
+    :param scaling_list:
+    :param title:
+    :param axlims:
+    :return:
+    """
+
+
+    Writer = matplotlib.animation.writers['ffmpeg']
+    writer = Writer(fps=15, bitrate=1800)
+
+    cdict = {1: 'r', 0: 'b'}
+    gdict = {1: 'Direct', 0:'Tree'}
+
+    def update_graph(num):
+        """
+        Updates the graph's positions
+        :param num: The number in the sequence to use
+        """
+        # Update all the stars
+        graph._offsets3d = (direct_positions[0][num], direct_positions[1][num], direct_positions[2][num])  # Have to do this for the
+        graph1._offsets3d = (false_positions[0][num], false_positions[1][num], false_positions[2][num])  # Have to do this for the
+        graph2._offsets3d = (true_positions[0][num], true_positions[1][num], true_positions[2][num])  # Have to do this for the
+        graph3._offsets3d = (tree_positions[0][num], tree_positions[1][num], tree_positions[2][num])  # Have to do this for the
+        fig.suptitle('DC: {} TC: {} Cut: {} Method: {} \n Sim Time: {} Myr'.format(input_args['direct_code'],
+                                                                               input_args['tree_code'], input_args['mass_cut'], method,
+                                                             np.round(num * 0.1, 2)))
+        return graph, graph1, graph2, graph3
+
+    fig = plt.figure(figsize=(20,5))
+    ax = fig.add_subplot(141, projection='3d')
+    ax2 = fig.add_subplot(142, projection='3d')
+    ax3 = fig.add_subplot(143, projection='3d')
+    ax4 = fig.add_subplot(144, projection='3d')
+    ax.set_zlabel("Z [parsec]")
+    ax.set_xlabel("X [parsec]")
+    ax.set_ylabel("Y [parsec]")
+    ax.set_title("Direct Only")
+    ax2.set_zlabel("Z [parsec]")
+    ax2.set_ylabel("Y [parsec]")
+    ax2.set_xlabel("X [parsec]")
+    ax2.set_title("Direct >= Split")
+    ax3.set_zlabel("Z [parsec]")
+    ax3.set_xlabel("X [parsec]")
+    ax3.set_ylabel("Y [parsec]")
+    ax3.set_title("Tree >= Split")
+    ax4.set_xlabel("X [parsec]")
+    ax4.set_ylabel("Y [parsec]")
+    ax4.set_zlabel("Z [parsec]")
+    ax4.set_title("Tree Only")
+
+
+    graph = ax.scatter(direct_positions[0][0], direct_positions[1][0], direct_positions[2][0], s=50*scaling_list, c=direct_colors)
+    graph3 = ax4.scatter(tree_positions[0][0], tree_positions[1][0], tree_positions[2][0], s=50*scaling_list, c=tree_colors)
+    graph1 = ax2.scatter(false_positions[0][0], false_positions[1][0], false_positions[2][0], s=50*scaling_list, c=false_colors, label=gdict)
+    graph2 = ax3.scatter(true_positions[0][0], true_positions[1][0], true_positions[2][0], s=50*scaling_list, c=true_colors)
+
+    import matplotlib.patches as mpatches
+    red_patch = mpatches.Patch(color='blue', label='Direct Particles')
+    blue_patch = mpatches.Patch(color='red', label='Tree Particles')
+    fig.legend(handles=[red_patch, blue_patch])
+
+    for ax in fig.get_axes():
+        if axlims is not None:
+            if isinstance(axlims[0], list):
+                ax.set_xlim3d(axlims[0])
+                ax.set_ylim3d(axlims[1])
+                ax.set_zlim3d(axlims[2])
+            else:
+                ax.set_xlim3d(axlims)
+                ax.set_ylim3d(axlims)
+                ax.set_zlim3d(axlims)
+
+    if 'method' in input_args.keys():
+        method = input_args['method']
+    else:
+        method = "mass"
+    fig.suptitle('DC: {} TC: {} Cut: {} Method: {} \n Sim Time: {} Myr'.format(input_args['direct_code'],
+                                                         input_args['tree_code'], input_args['mass_cut'], method,
+                                                         0.0))
+
+    ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
+    #plt.show()
+    if axlims is None:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}_Combined_4.mp4".format(input_args['direct_code'],
+                                                 input_args['tree_code'],
+                                                 input_args['virial_radius'],
+                                                 input_args['mass_cut'],
+                                                 str(input_args['flip_split']),
+                                                 input_args['num_bodies'],
+                                                 input_args['timestep']), writer=writer)
+    else:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}_AxLim_{}_Combined_4.mp4".format(input_args['direct_code'],
+                                                          input_args['tree_code'],
+                                                          input_args['virial_radius'],
+                                                          input_args['mass_cut'],
+                                                          str(input_args['flip_split']),
+                                                          input_args['num_bodies'],
+                                                          input_args['timestep'],
+                                                          axlims), writer=writer)
+    plt.cla()
+    plt.close(fig)
+
 
 def create_3d_2d_animation_array(direct_positions, tree_positions, false_positions, true_positions, false_colors, true_colors, input_args, num_timesteps, scaling_list, axlims=None):
     """
@@ -541,7 +659,7 @@ def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, 
                                                          0.0))
 
     ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
-    plt.show()
+    #plt.show()
     if axlims is None:
         ani.save("History_DC_{}_TC_{}_"
                  "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
@@ -574,25 +692,26 @@ filenames = [
     "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
 ]
 
-datax, datay, dataz, colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
+datax, datay, dataz, direct_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
 direct_positions = (datax, datay, dataz)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-5.,5.))
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-5.,5.))
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
 
-datax, datay, dataz, colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[3])
+datax, datay, dataz, tree_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[3])
 tree_positions = (datax, datay, dataz)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
 
 datax, datay, dataz, false_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[1])
 false_positions = (datax, datay, dataz)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
 
 datax, datay, dataz, true_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[2])
 true_positions = (datax, datay, dataz)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
+#create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
 
 
-create_3d_animation_array(direct_positions, tree_positions, false_positions, tree_positions, false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-10.,10.))
+create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-3.,3.))
+
