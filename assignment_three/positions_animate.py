@@ -379,8 +379,8 @@ def create_3d_array(direct_positions, tree_positions, false_positions, true_posi
     graph2 = ax3.scatter(true_positions[0][0], true_positions[1][0], true_positions[2][0], s=50*scaling_list, c=true_colors)
 
     import matplotlib.patches as mpatches
-    red_patch = mpatches.Patch(color='blue', label='Direct Particles')
-    blue_patch = mpatches.Patch(color='red', label='Tree Particles')
+    red_patch = mpatches.Patch(color='red', label='Direct Particles')
+    blue_patch = mpatches.Patch(color='blue', label='Tree Particles')
     fig.legend(handles=[red_patch, blue_patch])
 
     for ax in fig.get_axes():
