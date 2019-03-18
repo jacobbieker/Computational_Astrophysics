@@ -35,7 +35,6 @@ def convert_from_pickle(filename):
     hdf_filename = os.path.splitext(filename)[0] + ".hdf"
 
     try:
-        raise NotImplementedError
         snapshots = read_set_from_file(hdf_filename, "amuse")
         np.random.seed(5227) # Set for reproducability
         mZAMS = new_powerlaw_mass_distribution(10000, 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
@@ -45,7 +44,7 @@ def convert_from_pickle(filename):
         virial_radius = snapshots.history[0].virial_radius()
         _, core_radius, _ = snapshots.history[0].densitycentre_coreradius_coredens(
             unit_converter=converter)
-        total_radius = snapshots.history[0].LagrangianRadii(mf=[0.5],
+        half_mass = snapshots.history[0].LagrangianRadii(mf=[0.5],
                                                             cm=center_of_mass,
                                                             unit_converter=converter)[0][0]
     except:
@@ -91,24 +90,63 @@ def convert_from_pickle(filename):
 
     scaling_list = np.asarray(scaling_list)
 
+    tree_color = 'b'
+    direct_color = 'r'
+
     colors = []
     if input_args['tree_code'] is not None and input_args['direct_code'] is not None:
         if method == 'mass':
             for particle in masses:
                 if particle >= cut.value_in(units.MSun):
                     if dict_data['flip_split']:
-                        colors.append('b')
+                        colors.append(tree_color)
                     else:
-                        colors.append('r')
+                        colors.append(direct_color)
                 else:
                     if dict_data['flip_split']:
-                        colors.append('r')
+                        colors.append(tree_color)
                     else:
-                        colors.append('b')
+                        colors.append(direct_color)
+        elif method == "virial_radius":
+            for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0],ydata[0],zdata[0])):
+                if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec))**2 + (y_val-center_of_mass.y.value_in(units.parsec))**2 + (z_val-center_of_mass.z.value_in(units.parsec))**2) <= input_args['mass_cut']*virial_radius.value_in(units.parsec):
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
+                else:
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
+        elif method == "half_mass"
+            for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0],ydata[0],zdata[0])):
+                if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec))**2 + (y_val-center_of_mass.y.value_in(units.parsec))**2 + (z_val-center_of_mass.z.value_in(units.parsec))**2) <= input_args['mass_cut']*half_mass.value_in(units.parsec):
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
+                else:
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
+        elif method == "core_radius"
+            for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0],ydata[0],zdata[0])):
+                if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec))**2 + (y_val-center_of_mass.y.value_in(units.parsec))**2 + (z_val-center_of_mass.z.value_in(units.parsec))**2) <= input_args['mass_cut']*core_radius.value_in(units.parsec):
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
+                else:
+                    if dict_data['flip_split']:
+                        colors.append(tree_color)
+                    else:
+                        colors.append(direct_color)
     elif input_args['tree_code'] is None and input_args['direct_code'] is not None:
-        colors = np.asarray(['b' for i in range(len(scaling_list))])
+        colors = np.asarray([direct_color for i in range(len(scaling_list))])
     elif input_args['tree_code'] is not None and input_args['direct_code'] is None:
-        colors = np.asarray(['r' for i in range(len(scaling_list))])
+        colors = np.asarray([tree_color for i in range(len(scaling_list))])
 
         '''
         elif method == 'core_radius':
@@ -713,5 +751,5 @@ true_positions = (datax, datay, dataz)
 #create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
 
 
-create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-3.,3.))
+create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
 
