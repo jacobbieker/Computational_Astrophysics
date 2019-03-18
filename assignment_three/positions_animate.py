@@ -119,7 +119,7 @@ def convert_from_pickle(filename):
                         colors.append(tree_color)
                     else:
                         colors.append(direct_color)
-        elif method == "half_mass"
+        elif method == "half_mass":
             for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0],ydata[0],zdata[0])):
                 if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec))**2 + (y_val-center_of_mass.y.value_in(units.parsec))**2 + (z_val-center_of_mass.z.value_in(units.parsec))**2) <= input_args['mass_cut']*half_mass.value_in(units.parsec):
                     if dict_data['flip_split']:
@@ -131,7 +131,7 @@ def convert_from_pickle(filename):
                         colors.append(tree_color)
                     else:
                         colors.append(direct_color)
-        elif method == "core_radius"
+        elif method == "core_radius":
             for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0],ydata[0],zdata[0])):
                 if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec))**2 + (y_val-center_of_mass.y.value_in(units.parsec))**2 + (z_val-center_of_mass.z.value_in(units.parsec))**2) <= input_args['mass_cut']*core_radius.value_in(units.parsec):
                     if dict_data['flip_split']:
@@ -144,210 +144,11 @@ def convert_from_pickle(filename):
                     else:
                         colors.append(direct_color)
     elif input_args['tree_code'] is None and input_args['direct_code'] is not None:
-        colors = np.asarray([direct_color for i in range(len(scaling_list))])
+        colors = np.asarray([direct_color for _ in range(len(scaling_list))])
     elif input_args['tree_code'] is not None and input_args['direct_code'] is None:
-        colors = np.asarray([tree_color for i in range(len(scaling_list))])
-
-        '''
-        elif method == 'core_radius':
-            _, core_radius, _ = particles.densitycentre_coreradius_coredens(
-                unit_converter=converter)
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*core_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        elif method == 'half_mass':
-            half_mass_radius = \
-                particles.LagrangianRadii(mf=[0.5], cm=particles.center_of_mass(),
-                                          unit_converter=converter)[0][0]
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*half_mass_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        elif method == 'virial_radius':
-            virial_radius = particles.virial_radius()
-            for particle in particles:
-                if np.sqrt((particle.x - particles.center_of_mass().x) ** 2 + (
-                        particle.y - particles.center_of_mass().y) ** 2 + (
-                                   particle.z - particles.center_of_mass().z) ** 2) <= args['mass_cut']*virial_radius:
-                    if args['flip_split']:
-                        tree_particles.add_particle(particle)
-                    else:
-                        direct_particles.add_particle(particle)
-                else:
-                    if args['flip_split']:
-                        direct_particles.add_particle(particle)
-                    else:
-                        tree_particles.add_particle(particle)
-        '''
-
+        colors = np.asarray([tree_color for _ in range(len(scaling_list))])
 
     return xdata, ydata, zdata, colors, input_args, num_timesteps, scaling_list
-
-
-def create_3d_animation_array(direct_positions, tree_positions, false_positions, true_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
-    """
-        Create the animation of the stars over time, optionally with limits
-        Designed for seeing how flipping and direct and tree codes differ
-        Takes 4 sets
-        :param dataframe:
-        :param num_timesteps:
-        :param axlims: Limits for the axes, in ([X_low, X_high], [Y_low, Y_high], [Z_low,Z_high]) format
-        For the virial radius, it would be ([-3.,3.], [-3.,3.], [-3.,3.])
-        :return:
-        """
-
-    Writer = matplotlib.animation.writers['ffmpeg']
-    writer = Writer(fps=15, bitrate=1800)
-    cdict = {1: 'r', 0: 'b'}
-    gdict = {1: 'direct', 0:'tree'}
-
-    def update_graph(num):
-        """
-        Updates the graph's positions
-        :param num: The number in the sequence to use
-        """
-        # Update all the stars
-        for i in range(16):
-            if i+1 in [1,2,3,4]:
-                ax._offsets3d = (direct_positions[0][num], direct_positions[1][num], direct_positions[2][num])
-            elif i+1 in [5,6,7,8]:
-                ax._offsets3d = (false_positions[0][num], false_positions[1][num], false_positions[2][num])
-            elif i+1 in [9,10,11,12]:
-                ax._offsets3d = (true_positions[0][num], true_positions[1][num], true_positions[2][num])
-            elif i+1 in [13,14,15,16]:
-                ax._offsets3d = (tree_positions[0][num], tree_positions[1][num], tree_positions[2][num])
-        fig.suptitle('DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
-                                                                 input_args['tree_code'],
-                                                                 np.round(num * 0.1, 2)))
-        return graphs
-
-    fig = plt.figure(figsize=(20,20))
-    for i in range(16):
-        if i+1 in [2,6,10,14]:
-            ax = fig.add_subplot(4,4,i+1, projection='3d')
-            ax.view_init(elev=0, azim=0)
-            ax.set_zlabel("Z [parsec]")
-            ax.set_ylabel("Y [parsec]")
-            if axlims is not None:
-                if isinstance(axlims[0], list):
-                    ax.set_xlim3d(axlims[0])
-                    ax.set_ylim3d(axlims[1])
-                    ax.set_zlim3d(axlims[2])
-                else:
-                    ax.set_xlim3d(axlims)
-                    ax.set_ylim3d(axlims)
-                    ax.set_zlim3d(axlims)
-        elif i+1 in [3,7,11,15]:
-            ax = fig.add_subplot(4,4,i+1, projection='3d')
-            ax.view_init(elev=0, azim=90)
-            ax.set_zlabel("Z [parsec]")
-            ax.set_xlabel("X [parsec]")
-            if axlims is not None:
-                if isinstance(axlims[0], list):
-                    ax.set_xlim3d(axlims[0])
-                    ax.set_ylim3d(axlims[1])
-                    ax.set_zlim3d(axlims[2])
-                else:
-                    ax.set_xlim3d(axlims)
-                    ax.set_ylim3d(axlims)
-                    ax.set_zlim3d(axlims)
-        elif i+1 in [4,8,12,16]:
-            ax = fig.add_subplot(4,4,i+1, projection='3d')
-            ax.view_init(elev=90, azim=0)
-            ax.set_xlabel("X [parsec]")
-            ax.set_ylabel("Y [parsec]")
-            if axlims is not None:
-                if isinstance(axlims[0], list):
-                    ax.set_xlim3d(axlims[0])
-                    ax.set_ylim3d(axlims[1])
-                    ax.set_zlim3d(axlims[2])
-                else:
-                    ax.set_xlim3d(axlims)
-                    ax.set_ylim3d(axlims)
-                    ax.set_zlim3d(axlims)
-        elif i+1 in [1,5,9,13]:
-            ax = fig.add_subplot(4,4,i+1, projection='3d')
-            ax.set_zlabel("Z [parsec]")
-            ax.set_xlabel("X [parsec]")
-            ax.set_ylabel("Y [parsec]")
-            if axlims is not None:
-                if isinstance(axlims[0], list):
-                    ax.set_xlim3d(axlims[0])
-                    ax.set_ylim3d(axlims[1])
-                    ax.set_zlim3d(axlims[2])
-                else:
-                    ax.set_xlim3d(axlims)
-                    ax.set_ylim3d(axlims)
-                    ax.set_zlim3d(axlims)
-
-    graphs = []
-    allaxes = fig.get_axes()
-    print(len(allaxes))
-    labels = []
-    for i in range(16):
-        ax = allaxes[i]
-        if i+1 in [1,2,3,4]:
-            ax.scatter(direct_positions[0][0], direct_positions[1][0], direct_positions[2][0],s=50*scaling_list, c='b')
-        elif i+1 in [5,6,7,8]:
-            for g in np.unique(false_colors):
-                false_ix = np.where(false_colors == g)
-                one_label = ax.scatter(false_positions[0][0][false_ix], false_positions[1][0][false_ix], false_positions[2][0][false_ix], s=50*scaling_list, c=cdict[g], label=gdict[g])
-                labels.append(one_label)
-        elif i+1 in [9,10,11,12]:
-            for g in np.unique(true_colors):
-                true_ix = np.where(true_colors == g)
-                ax.scatter(true_positions[0][0][true_ix], true_positions[1][0][true_ix], true_positions[2][0][true_ix],s=50*scaling_list, c=cdict[g])
-        elif i+1 in [13,14,15,16]:
-            ax.scatter(tree_positions[0][0], tree_positions[1][0], tree_positions[2][0],s=50*scaling_list, c='r')
-    fig.suptitle('DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
-                                                         input_args['tree_code'],
-                                                         np.round(0.0, 2)))
-    fig.legend((labels[0], labels[1]), ('Direct', 'Tree'), 'upper left')
-    #plt.show()
-    #exit()
-    ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
-    if axlims is None:
-        ani.save("History_DC_{}_TC_{}_"
-                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                 "Timestep_{}_All4_Titled.mp4".format(input_args['direct_code'],
-                                          input_args['tree_code'],
-                                          input_args['virial_radius'],
-                                          input_args['mass_cut'],
-                                          str(input_args['flip_split']),
-                                          input_args['num_bodies'],
-                                          input_args['timestep']), writer=writer)
-    else:
-        ani.save("History_DC_{}_TC_{}_"
-                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                 "Timestep_{}_AxLim_{}_All4.mp4".format(input_args['direct_code'],
-                                                   input_args['tree_code'],
-                                                   input_args['virial_radius'],
-                                                   input_args['mass_cut'],
-                                                   str(input_args['flip_split']),
-                                                   input_args['num_bodies'],
-                                                   input_args['timestep'],
-                                                   axlims), writer=writer)
-    plt.cla()
-    plt.close(fig)
 
 def create_3d_array(direct_positions, tree_positions, false_positions, true_positions, direct_colors, tree_colors, false_colors, true_colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
     """
@@ -417,8 +218,8 @@ def create_3d_array(direct_positions, tree_positions, false_positions, true_posi
     graph2 = ax3.scatter(true_positions[0][0], true_positions[1][0], true_positions[2][0], s=50*scaling_list, c=true_colors)
 
     import matplotlib.patches as mpatches
-    red_patch = mpatches.Patch(color='red', label='Direct Particles')
-    blue_patch = mpatches.Patch(color='blue', label='Tree Particles')
+    red_patch = mpatches.Patch(color='blue', label='Direct Particles')
+    blue_patch = mpatches.Patch(color='red', label='Tree Particles')
     fig.legend(handles=[red_patch, blue_patch])
 
     for ax in fig.get_axes():
@@ -466,150 +267,6 @@ def create_3d_array(direct_positions, tree_positions, false_positions, true_posi
     plt.cla()
     plt.close(fig)
 
-
-def create_3d_2d_animation_array(direct_positions, tree_positions, false_positions, true_positions, false_colors, true_colors, input_args, num_timesteps, scaling_list, axlims=None):
-    """
-        Create the animation of the stars over time, optionally with limits
-        Designed for seeing how flipping and direct and tree codes differ
-        Takes 4 sets
-        :param dataframe:
-        :param num_timesteps:
-        :param axlims: Limits for the axes, in ([X_low, X_high], [Y_low, Y_high], [Z_low,Z_high]) format
-        For the virial radius, it would be ([-3.,3.], [-3.,3.], [-3.,3.])
-        :return:
-        """
-
-    Writer = matplotlib.animation.writers['ffmpeg']
-    writer = Writer(fps=15, bitrate=1800)
-    cdict = {1: 'r', 0: 'b'}
-    gdict = {1: 'direct', 0:'tree'}
-
-    def update_graph(num):
-        """
-        Updates the graph's positions
-        :param num: The number in the sequence to use
-        """
-        # Update all the stars
-        for i in range(16):
-            if i+1 in [1,2,3,4]:
-                ax._offsets3d = (direct_positions[0][num], direct_positions[1][num], direct_positions[2][num])
-            elif i+1 in [5,6,7,8]:
-                for g in np.unique(colors):
-                    true_ix = np.where(true_colors == g)
-                    false_ix = np.where(false_colors == g)
-                ax._offsets3d = (false_positions[0][num], false_positions[1][num], false_positions[2][num])
-            elif i+1 in [9,10,11,12]:
-                for g in np.unique(colors):
-                    true_ix = np.where(true_colors == g)
-                    false_ix = np.where(false_colors == g)
-                ax._offsets3d = (true_positions[0][num], true_positions[1][num], true_positions[2][num])
-            elif i+1 in [13,14,15,16]:
-                ax._offsets3d = (tree_positions[0][num], tree_positions[1][num], tree_positions[2][num])
-        fig.suptitle('DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
-                                                             input_args['tree_code'],
-                                                             np.round(num * 0.1, 2)))
-        return graphs
-
-    fig = plt.figure(figsize=(20,20))
-    for i in range(16):
-        if i+1 in [2,6,10,14]:
-            ax = fig.add_subplot(4,4,i+1)
-            ax.set_xlabel("Z [parsec]")
-            ax.set_ylabel("Y [parsec]")
-        elif i+1 in [3,7,11,15]:
-            ax = fig.add_subplot(4,4,i+1)
-            ax.set_ylabel("Z [parsec]")
-            ax.set_xlabel("X [parsec]")
-        elif i+1 in [4,8,12,16]:
-            ax = fig.add_subplot(4,4,i+1)
-            ax.set_xlabel("X [parsec]")
-            ax.set_ylabel("Y [parsec]")
-        elif i+1 in [1,5,9,13]:
-            ax = fig.add_subplot(4,4,i+1, projection='3d')
-            ax.set_zlabel("Z [parsec]")
-            ax.set_xlabel("X [parsec]")
-            ax.set_ylabel("Y [parsec]")
-
-    if axlims is not None:
-        if isinstance(axlims[0], list):
-            ax.set_xlim3d(axlims[0])
-            ax.set_ylim3d(axlims[1])
-            ax.set_zlim3d(axlims[2])
-        else:
-            ax.set_xlim3d(axlims)
-            ax.set_ylim3d(axlims)
-            ax.set_zlim3d(axlims)
-
-    graphs = []
-    allaxes = fig.get_axes()
-    print(len(allaxes))
-    for i in range(16):
-        if i+1 == 1:
-            allaxes[i+1].scatter(direct_positions[0][0], direct_positions[1][0], direct_positions[2][0], c='b')
-            # XY
-            allaxes[i+2].scatter(direct_positions[0][0], direct_positions[1][0], s=50*scaling_list, c='b')
-            # XZ
-            allaxes[i+3].scatter(direct_positions[0][0], direct_positions[2][0],s=50*scaling_list, c='b')
-            # YZ
-            allaxes[i+4].scatter(direct_positions[1][0], direct_positions[2][0],s=50*scaling_list, c='b')
-        elif i+1 == 5:
-            for g in np.unique(false_colors):
-                true_ix = np.where(false_colors == g)
-                allaxes[i+1].scatter(true_positions[0][0][true_ix], true_positions[1][0][true_ix], true_positions[2][0][true_ix], c=cdict[g])
-                # XY
-                allaxes[i+2].scatter(true_positions[0][0][true_ix], true_positions[1][0][true_ix],s=50*scaling_list, c=cdict[g])
-                # XZ
-                allaxes[i+3].scatter(true_positions[0][0][true_ix], true_positions[2][0][true_ix],s=50*scaling_list, c=cdict[g])
-                # YZ
-                allaxes[i+4].scatter(true_positions[1][0][true_ix], true_positions[2][0][true_ix],s=50*scaling_list, c=cdict[g])
-        elif i+1 == 9:
-            for g in np.unique(true_colors):
-                true_ix = np.where(true_colors == g)
-                allaxes[i+1].scatter(true_positions[0][0][true_ix], true_positions[1][0][true_ix], true_positions[2][0][true_ix], c=cdict[g])
-                # XY
-                allaxes[i+2].scatter(true_positions[0][0][true_ix], true_positions[1][0][true_ix],s=50*scaling_list, c=cdict[g])
-                # XZ
-                allaxes[i+3].scatter(true_positions[0][0][true_ix], true_positions[2][0][true_ix],s=50*scaling_list, c=cdict[g])
-                # YZ
-                allaxes[i+4].scatter(true_positions[1][0][true_ix], true_positions[2][0][true_ix],s=50*scaling_list, c=cdict[g])
-        elif i+1 == 12:
-            allaxes[i+1].scatter(tree_positions[0][0], tree_positions[1][0], tree_positions[2][0], c='r')
-            # XY
-            allaxes[i+2].scatter(tree_positions[0][0], tree_positions[1][0],s=50*scaling_list, c='r')
-            # XZ
-            allaxes[i+3].scatter(tree_positions[0][0], tree_positions[2][0],s=50*scaling_list, c='r')
-            # YZ
-            allaxes[i+4].scatter(tree_positions[1][0], tree_positions[2][0],s=50*scaling_list, c='r')
-    fig.suptitle('DC: {} TC: {} Sim Time: {} Myr'.format(input_args['direct_code'],
-                                                         input_args['tree_code'],
-                                                         np.round(0.0, 2)))
-    ax.legend(loc='best')
-    plt.show()
-    exit()
-    ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
-    if axlims is None:
-        ani.save("History_DC_{}_TC_{}_"
-                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                 "Timestep_{}.mp4".format(input_args['direct_code'],
-                                          input_args['tree_code'],
-                                          input_args['virial_radius'],
-                                          input_args['mass_cut'],
-                                          str(input_args['flip_split']),
-                                          input_args['num_bodies'],
-                                          input_args['timestep']), writer=writer)
-    else:
-        ani.save("History_DC_{}_TC_{}_"
-                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
-                 "Timestep_{}_AxLim_{}.mp4".format(input_args['direct_code'],
-                                                   input_args['tree_code'],
-                                                   input_args['virial_radius'],
-                                                   input_args['mass_cut'],
-                                                   str(input_args['flip_split']),
-                                                   input_args['num_bodies'],
-                                                   input_args['timestep'],
-                                                   axlims), writer=writer)
-    plt.cla()
-    plt.close(fig)
 
 def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, scaling_list, title=None, axlims=None):
     """
@@ -666,20 +323,17 @@ def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, 
     datax = xdata[0]
     datay = ydata[0]
     dataz = zdata[0]
-    labels = []
     for g in np.unique(colors):
         ix = np.where(colors == g)
         graph = ax.scatter(datax[ix], datay[ix], dataz[ix], s=50*scaling_list, c=cdict[g], label=gdict[g])
-        labels.append(graph)
         graph1 = ax2.scatter(datax[ix], datay[ix], dataz[ix], s=50*scaling_list, c=cdict[g])
         graph2 = ax3.scatter(datax[ix], datay[ix], dataz[ix], s=50*scaling_list, c=cdict[g])
         graph3 = ax4.scatter(datax[ix], datay[ix], dataz[ix], s=50*scaling_list, c=cdict[g])
 
-    if len(labels) >= 2:
-        fig.legend((labels[0], labels[1]), ('Direct', 'Tree'), 'upper left')
-    else:
-        for g in np.unique(colors):
-            fig.legend((labels[0],), (gdict[g]), 'upper left')
+    import matplotlib.patches as mpatches
+    red_patch = mpatches.Patch(color='blue', label='Direct Particles')
+    blue_patch = mpatches.Patch(color='red', label='Tree Particles')
+    fig.legend(handles=[red_patch, blue_patch])
 
     for ax in fig.get_axes():
         if axlims is not None:
