@@ -13,6 +13,24 @@ import argparse
 import matplotlib.pyplot as plt
 import pickle
 
+def get_average_model_time(walltimes, threads):
+    """
+    To get a better control over how long each one took, take the mode of the walltimes
+    and multiply that by the number of the total threads
+
+    Multiplied by the number of steps, and get a better value for the run time.
+    :param walltimes: List of walltime for each timestep
+    :param threads: The number of worker threads used in the code
+    :return:
+    """
+    walltimes = np.diff(walltimes)
+    # Need to get differences between all the values and then get median of that
+    median_walltime = np.median(walltimes)
+    median_walltime *= threads
+    median_walltime *= len(walltimes)
+
+    return median_walltime
+
 
 def load_history_from_file(filename):
     pickleFile = pickle.load(open(filename, 'rb'), fix_imports=True, encoding='latin1')
@@ -22,11 +40,14 @@ def load_history_from_file(filename):
 
     # Depending on version, might have wall time history or not
 
-    try:
-        walltime = dict_data['total_elapsed_time']
-    except KeyError:
-        walltime = dict_data['wall_time']
+    #walltime = dict_data['total_elapsed_time']
+    walltimes = dict_data['wall_time']
+    threads = input_args['workers']
+    if input_args['direct_code'] is not None and input_args['tree_code'] is not None:
+        threads *= 2
+    walltime = get_average_model_time(walltimes, threads)
 
+    total_particles = dict_data['num_direct'] + dict_data['num_tree']
     fraction_tree = dict_data['num_tree']/(dict_data['num_direct'] + dict_data['num_tree'])
 
 
@@ -51,7 +72,7 @@ def load_history_from_file(filename):
     half_mass = np.asarray(half_mass)
     core_radii = np.asarray(core_radii)
 
-    return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators, fraction_tree
+    return timesteps, energies, half_mass, core_radii, mass_cut, flip_split, walltime, integrators, fraction_tree, total_particles
 
 
 def calc_delta_energy(energies):
@@ -256,6 +277,78 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.show()
     plt.cla()
 
+def make_walltime_vs_points_plot(direct_filenames, tree_filenames, combined_filenames):
+    """
+    Creates a plot of the wall time vs the number of points
+    :param combined_filenames:
+    :return:
+    """
+    direct_datas = []
+    for filename in direct_filenames:
+        direct_datas.append(load_history_from_file(filename))
+    tree_datas = []
+    for filename in tree_filenames:
+        tree_datas.append(load_history_from_file(filename))
+
+    combined_datas = []
+    flipped_combined_datas = []
+    for filename in combined_filenames:
+        data = load_history_from_file(filename)
+        if not data[5]:
+            combined_datas.append(data)
+        else:
+            flipped_combined_datas.append(data)
+
+    wall_time = []
+    num_particles = []
+
+    for combined_data in combined_datas:
+        wall_time.append(combined_data[6])
+        num_particles.append(combined_data[9])
+
+    flipped_wall_time = []
+    flipped_num_particles = []
+
+    for combined_data in flipped_combined_datas:
+        flipped_wall_time.append(combined_data[6])
+        flipped_num_particles.append(combined_data[9])
+
+    direct_wall_time = []
+    direct_num_particles = []
+
+    for combined_data in direct_datas:
+        direct_wall_time.append(combined_data[6])
+        direct_num_particles.append(combined_data[9])
+
+    tree_wall_time = []
+    tree_num_particles = []
+
+    for combined_data in tree_datas:
+        tree_wall_time.append(combined_data[6])
+        tree_num_particles.append(combined_data[9])
+
+    # Now sorting
+    tree_wall_time = [x for _,x in sorted(zip(tree_num_particles, tree_wall_time))]
+    tree_num_particles = sorted(tree_num_particles)
+    direct_wall_time = [x for _,x in sorted(zip(direct_num_particles, direct_wall_time))]
+    direct_num_particles = sorted(direct_num_particles)
+    wall_time = [x for _,x in sorted(zip(num_particles, wall_time))]
+    num_particles = sorted(num_particles)
+    flipped_wall_time = [x for _,x in sorted(zip(flipped_num_particles, wall_time))]
+    flipped_num_particles = sorted(flipped_num_particles)
+    plt.plot(num_particles, wall_time, c='g', label='Flip = False')
+    plt.plot(flipped_num_particles, flipped_wall_time, c='y', label='Flip = True')
+    plt.plot(direct_num_particles, direct_wall_time, c='b', label='Direct')
+    plt.plot(tree_num_particles, tree_wall_time, c='r', label='Tree')
+    plt.xlabel("Number of Particles")
+    plt.ylabel("Walltime (seconds)")
+    plt.title("Walltime vs Number of Particles")
+    plt.legend(loc='best')
+    plt.savefig("Walltime_vs_Number_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+                dpi=300)
+    plt.show()
+    plt.cla()
+
 
 def make_converters(input_args, input_particles, all_converter):
     """
@@ -368,8 +461,8 @@ def get_args():
                     help="Direct Code Integrator (ph4, Huayno, Hermite, or SmallN) or None")
     ap.add_argument("-tc", '--tree_code', required=False, default='bhtree', type=str,
                     help="Tree Code Integrator (BHTree, Bonsai, Octgrav etc.) or None")
-    ap.add_argument("-mc", '--mass_cut', required=False, default=1., type=float,
-                    help="Mass Cutoff for splitting bodies, in units MSun (default = 6.), if splitting by radius, set for what multiple of the radius to use")
+    ap.add_argument("-mc", '--mass_cut', required=False, default=2., type=float,
+                    help="Mass Cutoff for splitting bodies, in units MSun (default = 2.), if splitting by radius, set for what multiple of the radius to use")
     ap.add_argument("-f", "--flip_split", required=False, default=False, type=str2bool,
                     help="Flip the splitting procedure, if True, all particles above mass_cut are sent to the tree code"
                          " if False (default), all particles above mass_cut are sent to the direct code")
@@ -426,16 +519,8 @@ def plot_sanity_checks(all_particles, direct_code_particles=None, tree_code_part
 
 
 if __name__ in ('__main__', '__plot__'):
-    import glob
 
-    mixed_ph4_bhtree = []
-    for file in glob.glob("Base_Test/*.p"):
-        mixed_ph4_bhtree.append(file)
-    bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
-    ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
 
-    plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
-    exit()
     args = get_args()
     np.random.seed(args['seed'])  # Set for reproducability
     print(args)
