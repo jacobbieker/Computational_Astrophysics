@@ -1,7 +1,6 @@
 from amuse.couple import bridge
 from amuse.units import units
-from amuse.datamodel import Particles, particle_attributes
-from amuse.units import nbody_system
+from amuse.datamodel import Particles
 from amuse.community.huayno.interface import Huayno
 from amuse.community.hermite0.interface import Hermite
 from amuse.community.smalln.interface import SmallN
@@ -10,7 +9,6 @@ from amuse.community.bhtree.interface import BHTree
 from amuse.community.octgrav.interface import Octgrav
 from amuse.community.bonsai.interface import Bonsai
 from amuse.io import write_set_to_file
-from amuse.community.seba.interface import SeBa
 import numpy as np
 
 import pickle

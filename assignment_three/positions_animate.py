@@ -81,9 +81,9 @@ def convert_from_pickle(filename):
                         colors.append(direct_color)
                 else:
                     if dict_data['flip_split']:
-                        colors.append(tree_color)
-                    else:
                         colors.append(direct_color)
+                    else:
+                        colors.append(tree_color)
         elif method == "virial_radius":
             for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0], ydata[0], zdata[0])):
                 if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec)) ** 2 + (
@@ -96,9 +96,9 @@ def convert_from_pickle(filename):
                         colors.append(direct_color)
                 else:
                     if dict_data['flip_split']:
-                        colors.append(tree_color)
-                    else:
                         colors.append(direct_color)
+                    else:
+                        colors.append(tree_color)
         elif method == "half_mass":
             for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0], ydata[0], zdata[0])):
                 if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec)) ** 2 + (
@@ -111,9 +111,9 @@ def convert_from_pickle(filename):
                         colors.append(direct_color)
                 else:
                     if dict_data['flip_split']:
-                        colors.append(tree_color)
-                    else:
                         colors.append(direct_color)
+                    else:
+                        colors.append(tree_color)
         elif method == "core_radius":
             for index, (x_val, y_val, z_val) in enumerate(zip(xdata[0], ydata[0], zdata[0])):
                 if np.sqrt((x_val - center_of_mass.x.value_in(units.parsec)) ** 2 + (
@@ -126,9 +126,9 @@ def convert_from_pickle(filename):
                         colors.append(direct_color)
                 else:
                     if dict_data['flip_split']:
-                        colors.append(tree_color)
-                    else:
                         colors.append(direct_color)
+                    else:
+                        colors.append(tree_color)
     elif args['tree_code'] is None and args['direct_code'] is not None:
         colors = np.asarray([direct_color for _ in range(len(scaling_list))])
     elif args['tree_code'] is not None and args['direct_code'] is None:
@@ -397,7 +397,7 @@ true_positions = (datax, datay, dataz)
 
 try:
     create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
-                    false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
+                    false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list, axlims=(-3.,3.))
 except:
     try:
         create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,

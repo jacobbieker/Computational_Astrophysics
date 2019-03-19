@@ -256,8 +256,6 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.show()
     plt.cla()
 
-    return NotImplementedError
-
 
 def make_converters(input_args, input_particles, all_converter):
     """
