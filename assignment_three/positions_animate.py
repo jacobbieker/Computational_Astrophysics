@@ -3,8 +3,10 @@ import pickle
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation
+from amuse.lab import *
 from amuse.units import units
 from amuse.io import read_set_from_file
+from amuse.ic.plummer import new_plummer_model
 import os
 from amuse.units import nbody_system
 from amuse.ic.salpeter import new_powerlaw_mass_distribution
@@ -16,21 +18,22 @@ def convert_from_pickle(filename):
 
     hdf_filename = os.path.splitext(filename)[0] + ".hdf"
 
-    try:
-        snapshots = read_set_from_file(hdf_filename, "amuse")
-        np.random.seed(5227)  # Set for reproducability
-        mZAMS = new_powerlaw_mass_distribution(10000, 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
-        cluster_mass = mZAMS.sum()  # (args['num_bodies']) | units.MSun
-        converter = nbody_system.nbody_to_si(cluster_mass, 3 | units.parsec)
-        center_of_mass = snapshots.history[0].center_of_mass()
-        virial_radius = snapshots.history[0].virial_radius()
-        _, core_radius, _ = snapshots.history[0].densitycentre_coreradius_coredens(
-            unit_converter=converter)
-        half_mass = snapshots.history[0].LagrangianRadii(mf=[0.5],
-                                                         cm=center_of_mass,
-                                                         unit_converter=converter)[0][0]
-    except:
-        print("Can't Open File")
+    np.random.seed(5227)  # Set for reproducability
+    mZAMS = new_powerlaw_mass_distribution(10000, 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
+    cluster_mass = mZAMS.sum()  # (args['num_bodies']) | units.MSun
+    converter = nbody_system.nbody_to_si(cluster_mass, 3 | units.parsec)
+    particles = new_plummer_model(10000, convert_nbody=converter)
+    particles.mass = mZAMS
+    particles.scale_to_standard(convert_nbody=converter)
+    center_of_mass = particles.center_of_mass()
+    virial_radius = particles.virial_radius()
+    _, core_radius, _ = particles.densitycentre_coreradius_coredens(
+        unit_converter=converter)
+    half_mass = particles.LagrangianRadii(mf=[0.5],
+                                          cm=center_of_mass,
+                                          unit_converter=converter)[0][0]
+
+    print(np.sqrt(virial_radius ** 3 / (particles.mass.sum() * constants.G)).value_in(units.Myr))
 
     dict_data = pickleFile[1]
     args = pickleFile[0]
@@ -233,7 +236,7 @@ def create_3d_array(direct_positions, tree_positions, false_positions, true_posi
                                                                                0.0))
 
     ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
-    #plt.show()
+    # plt.show()
     if axlims is None:
         ani.save("History_DC_{}_TC_{}_"
                  "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
@@ -255,6 +258,137 @@ def create_3d_array(direct_positions, tree_positions, false_positions, true_posi
                                                               input_args['num_bodies'],
                                                               input_args['timestep'],
                                                               axlims), writer=writer)
+    plt.cla()
+    plt.close(fig)
+
+
+def create_3d_array_radii(direct_positions, tree_positions, virial_positions, core_positions, half_mass_positions,
+                          direct_colors, tree_colors,
+                          virial_colors, core_colors, half_mass_colors, input_args, num_timesteps, scaling_list,
+                          axlims=None):
+    """
+    This creates a 1 x 4 showing the different effects that the cuts have on the animation
+    :param direct_positions:
+    :param tree_positions:
+    :param virial_positions:
+    :param core_positions:
+    :param virial_colors:
+    :param core_colors:
+    :param input_args:
+    :param num_timesteps:
+    :param scaling_list:
+    :param axlims:
+    :return:
+    """
+
+    Writer = matplotlib.animation.writers['ffmpeg']
+    writer = Writer(fps=15, bitrate=1800)
+
+    def update_graph(num):
+        """
+        Updates the graph's positions
+        :param num: The number in the sequence to use
+        """
+        # Update all the stars
+        graph._offsets3d = (
+            direct_positions[0][num], direct_positions[1][num], direct_positions[2][num])  # Have to do this for the
+        graph1._offsets3d = (
+            virial_positions[0][num], virial_positions[1][num], virial_positions[2][num])  # Have to do this for the
+        graph2._offsets3d = (
+            core_positions[0][num], core_positions[1][num], core_positions[2][num])  # Have to do this for the
+        graph3._offsets3d = (
+            tree_positions[0][num], tree_positions[1][num], tree_positions[2][num])  # Have to do this for the
+        graph4._offsets3d = (
+            half_mass_positions[0][num], half_mass_positions[1][num], half_mass_positions[2][num])  # Have to do this for the
+
+        fig.suptitle('DC: {} TC: {} Cut: {} \n Sim Time: {} Myr'.format(input_args['direct_code'],
+                                                                        input_args['tree_code'],
+                                                                        input_args['mass_cut'],
+                                                                        np.round(num * 0.1, 2)))
+        return graph, graph1, graph2, graph3, graph4
+
+    fig = plt.figure(figsize=(15, 10))
+    ax = fig.add_subplot(231, projection='3d')
+    ax2 = fig.add_subplot(232, projection='3d')
+    ax3 = fig.add_subplot(233, projection='3d')
+    ax4 = fig.add_subplot(234, projection='3d')
+    ax5 = fig.add_subplot(235, projection='3d')
+    ax.set_zlabel("Z [parsec]")
+    ax.set_xlabel("X [parsec]")
+    ax.set_ylabel("Y [parsec]")
+    ax.set_title("Direct Only")
+    ax2.set_zlabel("Z [parsec]")
+    ax2.set_ylabel("Y [parsec]")
+    ax2.set_xlabel("X [parsec]")
+    ax2.set_title("Virial Radius")
+    ax3.set_zlabel("Z [parsec]")
+    ax3.set_xlabel("X [parsec]")
+    ax3.set_ylabel("Y [parsec]")
+    ax3.set_title("Core Radius")
+    ax4.set_xlabel("X [parsec]")
+    ax4.set_ylabel("Y [parsec]")
+    ax4.set_zlabel("Z [parsec]")
+    ax4.set_title("Tree Only")
+    ax5.set_xlabel("X [parsec]")
+    ax5.set_ylabel("Y [parsec]")
+    ax5.set_zlabel("Z [parsec]")
+    ax5.set_title("Half Mass")
+
+    graph = ax.scatter(direct_positions[0][0], direct_positions[1][0], direct_positions[2][0], s=50 * scaling_list,
+                       c=direct_colors)
+    graph3 = ax4.scatter(tree_positions[0][0], tree_positions[1][0], tree_positions[2][0], s=50 * scaling_list,
+                         c=tree_colors)
+    graph1 = ax2.scatter(virial_positions[0][0], virial_positions[1][0], virial_positions[2][0], s=50 * scaling_list,
+                         c=virial_colors)
+    graph2 = ax3.scatter(core_positions[0][0], core_positions[1][0], core_positions[2][0], s=50 * scaling_list,
+                         c=core_colors)
+    graph4 = ax5.scatter(half_mass_positions[0][0], half_mass_positions[1][0], half_mass_positions[2][0],
+                         s=50 * scaling_list,
+                         c=half_mass_colors)
+
+    red_patch = mpatches.Patch(color='blue', label='Direct Particles')
+    blue_patch = mpatches.Patch(color='red', label='Tree Particles')
+    fig.legend(handles=[red_patch, blue_patch])
+
+    for ax in fig.get_axes():
+        if axlims is not None:
+            if isinstance(axlims[0], list):
+                ax.set_xlim3d(axlims[0])
+                ax.set_ylim3d(axlims[1])
+                ax.set_zlim3d(axlims[2])
+            else:
+                ax.set_xlim3d(axlims)
+                ax.set_ylim3d(axlims)
+                ax.set_zlim3d(axlims)
+
+    fig.suptitle('DC: {} TC: {} Multiple: {} \n Sim Time: {} Myr'.format(input_args['direct_code'],
+                                                                         input_args['tree_code'],
+                                                                         input_args['mass_cut'],
+                                                                         0.0))
+
+    ani = matplotlib.animation.FuncAnimation(fig, update_graph, num_timesteps, interval=50, blit=False)
+    # plt.show()
+    if axlims is None:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}_Combined_Radii.mp4".format(input_args['direct_code'],
+                                                         input_args['tree_code'],
+                                                         input_args['virial_radius'],
+                                                         input_args['mass_cut'],
+                                                         str(input_args['flip_split']),
+                                                         input_args['num_bodies'],
+                                                         input_args['timestep']), writer=writer)
+    else:
+        ani.save("History_DC_{}_TC_{}_"
+                 "Radius_{}_Cut_{}_Flip_{}_Stars_{}_"
+                 "Timestep_{}_AxLim_{}_Combined_Radii.mp4".format(input_args['direct_code'],
+                                                                  input_args['tree_code'],
+                                                                  input_args['virial_radius'],
+                                                                  input_args['mass_cut'],
+                                                                  str(input_args['flip_split']),
+                                                                  input_args['num_bodies'],
+                                                                  input_args['timestep'],
+                                                                  axlims), writer=writer)
     plt.cla()
     plt.close(fig)
 
@@ -367,6 +501,7 @@ def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, 
     plt.close(fig)
 
 
+'''
 filenames = [
     "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
     "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_2.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
@@ -398,4 +533,32 @@ true_positions = (datax, datay, dataz)
 
 create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
                 false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
+'''
+filenames = [
+    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
+    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_half_mass.p",
+    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_virial_radius.p",
+    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_core_radius.p",
+    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
+]
 
+datax, datay, dataz, direct_colors, _, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
+direct_positions = (datax, datay, dataz)
+
+datax, datay, dataz, tree_colors, _, _, _ = convert_from_pickle(filenames[4])
+tree_positions = (datax, datay, dataz)
+
+datax, datay, dataz, half_mass_colors, input_args, _, _ = convert_from_pickle(filenames[1])
+half_mass_positions = (datax, datay, dataz)
+
+datax, datay, dataz, virial_colors, _, _, _ = convert_from_pickle(filenames[2])
+virial_positions = (datax, datay, dataz)
+
+datax, datay, dataz, core_colors, _, _, _ = convert_from_pickle(filenames[3])
+core_positions = (datax, datay, dataz)
+
+create_3d_array_radii(direct_positions, tree_positions, virial_positions, core_positions, half_mass_positions,
+                      direct_colors, tree_colors,
+                      virial_colors, core_colors, half_mass_colors, input_args, num_timesteps,
+                      scaling_list=scaling_list,
+                      axlims=(-5,5))

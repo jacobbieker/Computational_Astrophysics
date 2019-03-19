@@ -49,6 +49,12 @@ def get_average_model_time(walltimes, threads):
 
 
 def load_history_from_file(filename):
+    """
+    Loads the history and diagnostics from the pickle filename
+
+    :param filename:
+    :return:
+    """
     pickleFile = pickle.load(open(filename, 'rb'), fix_imports=True, encoding='latin1')
 
     dict_data = pickleFile[1]
@@ -56,7 +62,6 @@ def load_history_from_file(filename):
 
     # Depending on version, might have wall time history or not
 
-    walltime = dict_data['total_elapsed_time']
     walltimes = dict_data['wall_time']
     threads = input_args['workers']
     if input_args['direct_code'] is not None and input_args['tree_code'] is not None:
@@ -80,7 +85,7 @@ def load_history_from_file(filename):
         half_mass[i] = half_mass[i].value_in(units.parsec)
         core_radii[i] = core_radii[i].value_in(units.parsec)
 
-    mass_cut = np.asarray(dict_data['mass_cut'].value_in(units.MSun))
+    mass_cut = np.asarray(dict_data['mass_cut'].value_in(units.MSun)) # Works for both mass and other methods
     flip_split = np.asarray(dict_data['flip_split'])
     integrators = (input_args['direct_code'], input_args['tree_code'])
     timesteps = np.asarray(timesteps)
@@ -106,7 +111,7 @@ def calc_delta_energy(energies):
     return delta_energy
 
 
-def plot_outputs(only_direct_name, only_tree_name, combined_names):
+def plot_outputs(only_direct_name, only_tree_name, combined_names, method="Mass"):
     """
     Makes most of the plot outputs for the report
     Given a direct_name, tree_name, and set of combined_names, load the data into dataframes and run from there
@@ -142,50 +147,121 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 
     # First is the energy error over time
+    for combined_data in combined_datas:
+        if combined_data[5]:
+            plt.plot(combined_data[0], calc_delta_energy(combined_data[1]), color=cmap(norm(combined_data[4])))
     plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='black', linestyle='-.', linewidth=3.0)
     plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', linestyle='--', c='black', linewidth=3.0)
-    for combined_data in combined_datas:
-        plt.plot(combined_data[0], calc_delta_energy(combined_data[1]), color=cmap(norm(combined_data[4])))
     plt.ylabel('(E_init - E_curr)/E_init')
     plt.xlabel('Simulation Time [Myr]')
-    plt.title("Relative Energy Error")
+    plt.title("Relative Energy Error Method: {} Flipped".format(method))
     plt.legend(loc='best')
     sm.set_array([])
     cbar = plt.colorbar(sm)
-    cbar.set_label("Mass Cut")
-    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}_Method_{}_Flipped.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method),
+                dpi=300)
+    plt.show()
+    plt.cla()
+
+    # First is the energy error over time
+    for combined_data in combined_datas:
+        if not combined_data[5]:
+            plt.plot(combined_data[0], calc_delta_energy(combined_data[1]), color=cmap(norm(combined_data[4])))
+    plt.plot(direct_data[0], calc_delta_energy(direct_data[1]), label='Direct', c='black', linestyle='dashed', linewidth=3.0)
+    plt.plot(tree_data[0], calc_delta_energy(tree_data[1]), label='Tree', c='black', linewidth=3.0)
+    plt.ylabel('(E_init - E_curr)/E_init')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Relative Energy Error Method: {}".format(method))
+    plt.legend(loc='best')
+    sm.set_array([])
+    cbar = plt.colorbar(sm)
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Relative_Energy_Error_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method),
                 dpi=300)
     plt.show()
     plt.cla()
 
     # Now the Half Mass and Core Radii Over time
-    plt.plot(direct_data[0], direct_data[2], label='Direct', c='black', linestyle='-.', linewidth=3.0)
-    plt.plot(tree_data[0], tree_data[2], label='Tree', linestyle='--', c='black', linewidth=3.0)
     for combined_data in combined_datas:
-        plt.plot(combined_data[0], combined_data[2], color=cmap(norm(combined_data[4])))
+        if combined_data[5]:
+            plt.plot(combined_data[0], combined_data[2], color=cmap(norm(combined_data[4])))
+    plt.plot(direct_data[0], direct_data[2], label='Direct', c='black', linestyle='dashed', linewidth=3.0)
+    plt.plot(tree_data[0], tree_data[2], label='Tree', c='black', linewidth=3.0)
     plt.ylabel('Half Mass Radius (parsecs)')
     plt.xlabel('Simulation Time [Myr]')
-    plt.title("Half Mass")
+    plt.title("Half Mass Method: {} Flipped".format(method))
     plt.legend(loc='best')
     sm.set_array([])
     cbar = plt.colorbar(sm)
-    cbar.set_label("Mass Cut")
-    plt.savefig("Half_Mass_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Half_Mass_DC_{}_TC_{}_Method_{}_Flipped.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
     plt.show()
     plt.cla()
 
-    plt.plot(direct_data[0], direct_data[3], label='Direct', c='black', linestyle='-.', linewidth=3.0)
-    plt.plot(tree_data[0], tree_data[3], label='Tree', linestyle='--', c='black', linewidth=3.0)
     for combined_data in combined_datas:
-        plt.plot(combined_data[0], combined_data[3], color=cmap(norm(combined_data[4])))
-    plt.ylabel('Core Radius (parsecs)')
+        if not combined_data[5]:
+            plt.plot(combined_data[0], combined_data[2], color=cmap(norm(combined_data[4])))
+    plt.plot(direct_data[0], direct_data[2], label='Direct', c='black', linestyle='dashed', linewidth=3.0)
+    plt.plot(tree_data[0], tree_data[2], label='Tree', c='black', linewidth=3.0)
+    plt.ylabel('Half Mass Radius (parsecs)')
     plt.xlabel('Simulation Time [Myr]')
-    plt.title("Core Radius")
+    plt.title("Half Mass Method: {}".format(method))
     plt.legend(loc='best')
     sm.set_array([])
     cbar = plt.colorbar(sm)
-    cbar.set_label("Mass Cut")
-    plt.savefig("Core_Radii_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Half_Mass_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
+    plt.show()
+    plt.cla()
+
+    for combined_data in combined_datas:
+        if combined_data[5]:
+            plt.plot(combined_data[0], combined_data[3], color=cmap(norm(combined_data[4])))
+    plt.plot(direct_data[0], direct_data[3], label='Direct', c='black', linestyle='dashed', linewidth=3.0)
+    plt.plot(tree_data[0], tree_data[3], label='Tree', c='black', linewidth=3.0)
+    plt.ylabel('Core Radius (parsecs)')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Core Radius Method: {} Flipped".format(method))
+    plt.legend(loc='best')
+    sm.set_array([])
+    cbar = plt.colorbar(sm)
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Core_Radii_DC_{}_TC_{}_Method_{}_Flipped.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
+    plt.show()
+    plt.cla()
+
+    for combined_data in combined_datas:
+        if not combined_data[5]:
+            plt.plot(combined_data[0], combined_data[3], color=cmap(norm(combined_data[4])))
+    plt.plot(direct_data[0], direct_data[3], label='Direct', c='black', linestyle='dashed', linewidth=3.0)
+    plt.plot(tree_data[0], tree_data[3], label='Tree', c='black', linewidth=3.0)
+    plt.ylabel('Core Radius (parsecs)')
+    plt.xlabel('Simulation Time [Myr]')
+    plt.title("Core Radius Method: {}".format(method))
+    plt.legend(loc='best')
+    sm.set_array([])
+    cbar = plt.colorbar(sm)
+    if method == "Mass":
+        cbar.set_label("Mass Cut (MSun)")
+    else:
+        cbar.set_label("Multiple")
+    plt.savefig("Core_Radii_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
     plt.show()
     plt.cla()
 
@@ -221,11 +297,14 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
 
     plt.plot(done_splits, final_error, label='Direct >= Cut', c='r')
     plt.plot(flipped_done_splits, flipped_final_error, label='Tree >= Cut', c='b')
-    plt.xlabel("Mass Split (MSun)")
+    if method == "Mass":
+        plt.xlabel("Mass Split (MSun)")
+    else:
+        plt.xlabel("Split (Multiple of Value)")
     plt.ylabel("(E_init - E_final)/E_init")
-    plt.title("Final Energy Error by Mass Cut")
+    plt.title("Final Energy Error by Cut Method: {}".format(method))
     plt.legend(loc='best')
-    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+    plt.savefig("Mass_Split_Final_Error_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method),
                 dpi=300)
     plt.show()
     plt.cla()
@@ -257,11 +336,14 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     flipped_mass_cut_list, flipped_final_walltime = sort_lists(flipped_mass_cut_list, flipped_final_walltime)
     plt.plot(mass_cut_list, final_walltime, label='Direct >= Cut', c='r')
     plt.plot(flipped_mass_cut_list, flipped_final_walltime, label='Tree >= Cut', c='b')
-    plt.xlabel("Mass Split (MSun)")
+    if method == "Mass":
+        plt.xlabel("Mass Split (MSun)")
+    else:
+        plt.xlabel("Split (Multiple of Value)")
     plt.ylabel("Walltime (sec)")
-    plt.title("Walltime vs Mass Split")
+    plt.title("Walltime vs Split Method: {}".format(method))
     plt.legend(loc='best')
-    plt.savefig("Mass_Split_Walltime_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.savefig("Mass_Split_Walltime_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
     plt.show()
     plt.cla()
 
@@ -282,8 +364,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.plot(mass_cut_list, final_walltime, c='r')
     plt.xlabel("Fraction of Particles in Tree Code")
     plt.ylabel("Walltime (sec)")
-    plt.title("Walltime vs Fraction in Tree")
-    plt.savefig("Fractional_Walltime_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]), dpi=300)
+    plt.title("Walltime vs Fraction in Tree Method: {}".format(method))
+    plt.savefig("Fractional_Walltime_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method), dpi=300)
     plt.show()
     plt.cla()
 
@@ -305,8 +387,8 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names):
     plt.plot(done_splits, final_error, c='b')
     plt.xlabel("Fraction of Particles in Tree Code")
     plt.ylabel("(E_init - E_final)/E_init")
-    plt.title("Final Energy Error by Particle Fraction")
-    plt.savefig("Particle_Fraction_Final_Error_DC_{}_TC_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1]),
+    plt.title("Final Energy Error by Particle Fraction Method: {}".format(method))
+    plt.savefig("Particle_Fraction_Final_Error_DC_{}_TC_{}_Method_{}.png".format(combined_datas[0][7][0], combined_datas[0][7][1], method),
                 dpi=300)
     plt.show()
     plt.cla()
@@ -389,8 +471,8 @@ if __name__ in ('__main__', '__plot__'):
     mixed_ph4_bhtree = []
     for file in glob.glob("Base_Test/combined/*.p"):
         mixed_ph4_bhtree.append(file)
-    for file in glob.glob("Base_Test/combined_10/*.p"):
-        mixed_ph4_bhtree.append(file)
+    #for file in glob.glob("Base_Test/combined_10/*.p"):
+    #    mixed_ph4_bhtree.append(file)
     bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
     ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
 
@@ -403,5 +485,18 @@ if __name__ in ('__main__', '__plot__'):
         combined_filenames.append(file)
     for file in glob.glob("walltime_by_n/tree/*.p"):
         tree_filenames.append(file)
-    make_walltime_vs_points_plot(direct_filenames, tree_filenames, combined_filenames)
+    #make_walltime_vs_points_plot(direct_filenames, tree_filenames, combined_filenames)
     plot_outputs(ph4_only, bh_tree_only, mixed_ph4_bhtree)
+    #exit()
+    half_mass_files = []
+    core_radius_files = []
+    virial_files = []
+    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*half_mass.p"):
+        half_mass_files.append(file)
+    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*core_radius.p"):
+        core_radius_files.append(file)
+    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*virial_radius.p"):
+        virial_files.append(file)
+    plot_outputs(ph4_only, bh_tree_only, half_mass_files, method="Half Mass")
+    plot_outputs(ph4_only, bh_tree_only, core_radius_files, method="Core Radius")
+    plot_outputs(ph4_only, bh_tree_only, virial_files, method="Virial Radius")
