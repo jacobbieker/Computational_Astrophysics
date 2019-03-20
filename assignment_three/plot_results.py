@@ -396,8 +396,11 @@ def plot_outputs(only_direct_name, only_tree_name, combined_names, method="Mass"
 
 def make_walltime_vs_points_plot(direct_filenames, tree_filenames, combined_filenames):
     """
-    Creates a plot of the wall time vs the number of points
-    :param combined_filenames:
+        Creates a plot of the wall time vs the number of points
+
+    :param direct_filenames: File names for the direct code outputs
+    :param tree_filenames: Filenames for the tree code outputs
+    :param combined_filenames: Filenames for the combined code outputs
     :return:
     """
     direct_datas = []
@@ -468,13 +471,16 @@ def make_walltime_vs_points_plot(direct_filenames, tree_filenames, combined_file
 
 
 if __name__ in ('__main__', '__plot__'):
+    """
+    This code plots the results for the paper
+    """
     mixed_ph4_bhtree = []
     for file in glob.glob("Base_Test/combined/*.p"):
         mixed_ph4_bhtree.append(file)
     #for file in glob.glob("Base_Test/combined_10/*.p"):
     #    mixed_ph4_bhtree.append(file)
-    bh_tree_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
-    ph4_only = '/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+    bh_tree_only = 'Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
+    ph4_only = 'Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p'
 
     direct_filenames = []
     tree_filenames = []
@@ -491,11 +497,11 @@ if __name__ in ('__main__', '__plot__'):
     half_mass_files = []
     core_radius_files = []
     virial_files = []
-    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*half_mass.p"):
+    for file in glob.glob("STRW_Comp/radii/*half_mass.p"):
         half_mass_files.append(file)
-    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*core_radius.p"):
+    for file in glob.glob("STRW_Comp/radii/*core_radius.p"):
         core_radius_files.append(file)
-    for file in glob.glob("/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/radii/*virial_radius.p"):
+    for file in glob.glob("STRW_Comp/radii/*virial_radius.p"):
         virial_files.append(file)
     plot_outputs(ph4_only, bh_tree_only, half_mass_files, method="Half Mass")
     plot_outputs(ph4_only, bh_tree_only, core_radius_files, method="Core Radius")

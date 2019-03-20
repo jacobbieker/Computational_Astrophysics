@@ -14,9 +14,12 @@ import matplotlib.patches as mpatches
 
 
 def convert_from_pickle(filename):
+    """
+    Converts from the pickle file to the format needed for the animations
+    :param filename:
+    :return:
+    """
     pickleFile = pickle.load(open(filename, 'rb'), fix_imports=True, encoding='latin1')
-
-    hdf_filename = os.path.splitext(filename)[0] + ".hdf"
 
     np.random.seed(5227)  # Set for reproducability
     mZAMS = new_powerlaw_mass_distribution(10000, 0.1 | units.MSun, 100 | units.MSun, alpha=-2.0)
@@ -32,8 +35,6 @@ def convert_from_pickle(filename):
     half_mass = particles.LagrangianRadii(mf=[0.5],
                                           cm=center_of_mass,
                                           unit_converter=converter)[0][0]
-
-    print(np.sqrt(virial_radius ** 3 / (particles.mass.sum() * constants.G)).value_in(units.Myr))
 
     dict_data = pickleFile[1]
     args = pickleFile[0]
@@ -143,7 +144,7 @@ def convert_from_pickle(filename):
 def create_3d_array(direct_positions, tree_positions, false_positions, true_positions, direct_colors, tree_colors,
                     false_colors, true_colors, input_args, num_timesteps, scaling_list, axlims=None):
     """
-    This creates a 1 x 4 showing the different effects that the cuts have on the animation
+    This creates a 2 x 2 showing the different effects that the cuts have on the animation
     :param direct_positions:
     :param tree_positions:
     :param false_positions:
@@ -267,7 +268,7 @@ def create_3d_array_radii(direct_positions, tree_positions, virial_positions, co
                           virial_colors, core_colors, half_mass_colors, input_args, num_timesteps, scaling_list,
                           axlims=None):
     """
-    This creates a 1 x 4 showing the different effects that the cuts have on the animation
+    This creates a 2 x 3 showing the different effects that the cuts have on the cluster
     :param direct_positions:
     :param tree_positions:
     :param virial_positions:
@@ -395,7 +396,7 @@ def create_3d_array_radii(direct_positions, tree_positions, virial_positions, co
 
 def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, scaling_list, axlims=None):
     """
-
+    Creates a single 3d aninmation of a single cluster run from multiple angls
     :param xdata:
     :param ydata:
     :param zdata:
@@ -501,64 +502,30 @@ def create_3d_animation(xdata, ydata, zdata, colors, input_args, num_timesteps, 
     plt.close(fig)
 
 
-'''
-filenames = [
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_2.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_2.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-]
+if __name__ in ('__main__', '__plot__'):
+    """
+    This code plots the animations
+    """
+    filenames = [
+    ]
 
-datax, datay, dataz, direct_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
-direct_positions = (datax, datay, dataz)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-5.,5.))
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
+    datax, datay, dataz, direct_colors, _, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
+    direct_positions = (datax, datay, dataz)
 
-datax, datay, dataz, tree_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[3])
-tree_positions = (datax, datay, dataz)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+    datax, datay, dataz, tree_colors, _, _, _ = convert_from_pickle(filenames[4])
+    tree_positions = (datax, datay, dataz)
 
-datax, datay, dataz, false_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[1])
-false_positions = (datax, datay, dataz)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+    datax, datay, dataz, half_mass_colors, input_args, _, _ = convert_from_pickle(filenames[1])
+    half_mass_positions = (datax, datay, dataz)
 
-datax, datay, dataz, true_colors, input_args, num_timesteps, scaling_list = convert_from_pickle(filenames[2])
-true_positions = (datax, datay, dataz)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list)
-# create_3d_animation(datax, datay, dataz, colors, input_args, num_timesteps, scaling_list, axlims=(-10.,10.))
+    datax, datay, dataz, virial_colors, _, _, _ = convert_from_pickle(filenames[2])
+    virial_positions = (datax, datay, dataz)
 
+    datax, datay, dataz, core_colors, _, _, _ = convert_from_pickle(filenames[3])
+    core_positions = (datax, datay, dataz)
 
-
-create_3d_array(direct_positions, tree_positions, false_positions, tree_positions, direct_colors, tree_colors,
-                false_colors, true_colors, input_args, num_timesteps, scaling_list=scaling_list)
-'''
-filenames = [
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_None_TC_bhtree_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_half_mass.p",
-    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_virial_radius.p",
-    "/home/jacob/Development/comp_astro/assignment_three/STRW_Comp/Radii_Vis/Checkpoint_DC_ph4_TC_bhtree_ClusterMass_6958.06538623_Radius_3.0_Cut_1.0_Flip_True_Stars_10000_Timestep_0.1_EndTime_100.0_Method_core_radius.p",
-    "/home/jacob/Development/comp_astro/assignment_three/Base_Test/Checkpoint_DC_ph4_TC_None_ClusterMass_6958.065386227829_Radius_3.0_Cut_6.0_Flip_False_Stars_10000_Timestep_0.1_EndTime_100.0.p",
-]
-
-datax, datay, dataz, direct_colors, _, num_timesteps, scaling_list = convert_from_pickle(filenames[0])
-direct_positions = (datax, datay, dataz)
-
-datax, datay, dataz, tree_colors, _, _, _ = convert_from_pickle(filenames[4])
-tree_positions = (datax, datay, dataz)
-
-datax, datay, dataz, half_mass_colors, input_args, _, _ = convert_from_pickle(filenames[1])
-half_mass_positions = (datax, datay, dataz)
-
-datax, datay, dataz, virial_colors, _, _, _ = convert_from_pickle(filenames[2])
-virial_positions = (datax, datay, dataz)
-
-datax, datay, dataz, core_colors, _, _, _ = convert_from_pickle(filenames[3])
-core_positions = (datax, datay, dataz)
-
-create_3d_array_radii(direct_positions, tree_positions, virial_positions, core_positions, half_mass_positions,
-                      direct_colors, tree_colors,
-                      virial_colors, core_colors, half_mass_colors, input_args, num_timesteps,
-                      scaling_list=scaling_list,
-                      axlims=(-5,5))
+    create_3d_array_radii(direct_positions, tree_positions, virial_positions, core_positions, half_mass_positions,
+                          direct_colors, tree_colors,
+                          virial_colors, core_colors, half_mass_colors, input_args, num_timesteps,
+                          scaling_list=scaling_list,
+                          axlims=(-5,5))
