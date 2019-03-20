@@ -15,12 +15,14 @@ from amuse.ic.salpeter import new_salpeter_mass_distribution
 # TODO Rename all 'as np' kind of ones to the actual name
 import time
 
+
 class Galaxy(object):
 
     def __init__(self, gravity_code=Huayno, stellar_code=SeBa, hydro_code=None, radiative_code=None,
                  mass=1e9 | units.MSun, dark_matter_mass=1e10 | units.MSun, radius=10 | units.kpc,
                  stellar_distribution=new_salpeter_mass_distribution):
         """
+
         This class includes everything needed to instantiate and evolve a simulated galaxy, with optional gas,
         radiative transport, stellar evolution, "dark matter", etc.
 
