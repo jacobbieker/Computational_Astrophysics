@@ -254,7 +254,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
 
 	# Plot the dE, ddE, core radius and halfmass radius in one plot with two Y-axis, the left for the energies and the right for the radii
-	fig, ax1 = plt.subplots()
+	fig, ax1 = matplotlib.pyplot.subplots()
 
 	ax2 = ax1.twinx()
 
@@ -268,13 +268,13 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	ax2.set_ylabel('Radius(parsec)')
 
 	lines = [p1, p2, p3, p4]
-	plt.legend(lines, [l.get_label() for l in lines], loc='best')
-	plt.title('Combined Gravity, IMF=%s, Gravity type=%s\nN=%i, Mcut= %.1f, Opening angle=%.1f'%(imf,method, N, m_cut.value_in(units.MSun), theta))
+	matplotlib.pyplot.legend(lines, [l.get_label() for l in lines], loc='best')
+	matplotlib.pyplot.title('Combined Gravity, IMF=%s, Gravity type=%s\nN=%i, Mcut= %.1f, Opening angle=%.1f'%(imf,method, N, m_cut.value_in(units.MSun), theta))
 	fig.tight_layout()
-	plt.savefig('./results/cluster_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf'%(imf, method, N, m_cut.value_in(units.MSun), theta))
+	matplotlib.pyplot.savefig('./results/cluster_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf'%(imf, method, N, m_cut.value_in(units.MSun), theta))
 
-	plt.clf()
-	plt.close()
+	matplotlib.pyplot.clf()
+	matplotlib.pyplot.close()
 
 	# Stop the evolution model that is running depending on the scheme that is used
 	if light_flag:	light_gravity.stop()
@@ -319,17 +319,17 @@ def main(N, theta, M_min, M_max, r,
 
 
 	# Plotting a histogram to have a picture of the IMF
-	fig_hist, ax_hist = plt.subplots()
-	ax_hist.hist(np.log(starcluster.mass.value_in(units.MSun)))
+	fig_hist, ax_hist = matplotlib.pyplot.subplots()
+	ax_hist.hist(numpy.log(starcluster.mass.value_in(units.MSun)))
 	ax_hist.set_xlabel('$log{mass}$')
-	plt.title('Mass Distribution')
-	plt.savefig('./results/cluster_%s_N=%i.pdf'%(imf, N))
-	plt.clf()
-	plt.close()
+	matplotlib.pyplot.title('Mass Distribution')
+	matplotlib.pyplot.savefig('./results/cluster_%s_N=%i.pdf'%(imf, N))
+	matplotlib.pyplot.clf()
+	matplotlib.pyplot.close()
 
 	# Plotting a scatter plot of the cluster before evolving
 	from mpl_toolkits.mplot3d import Axes3D
-	fig_scatter = plt.figure()
+	fig_scatter = matplotlib.pyplot.figure()
 	ax_scatter = fig_scatter.add_subplot(111, projection='3d')
 
 	xcluster = x_cluster.value_in(units.AU)
@@ -337,7 +337,7 @@ def main(N, theta, M_min, M_max, r,
 	zcluster = z_cluster.value_in(units.AU)
 	# The '1' corresponds to the second time step of the evolution, it can be change to plot a scatter plot at any time
 	ax_scatter.scatter(xcluster[1,:], ycluster[1,:], zcluster[1,:])
-	plt.savefig('./results/cluster_scatter_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf'%(imf, method, N, m_cut.value_in(units.MSun), theta))
+	matplotlib.pyplot.savefig('./results/cluster_scatter_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf'%(imf, method, N, m_cut.value_in(units.MSun), theta))
 	matplotlib..clf()
 	matplotlib.pyplot.close()
 
