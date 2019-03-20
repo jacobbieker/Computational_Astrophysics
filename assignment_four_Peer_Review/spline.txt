@@ -1,0 +1,38 @@
+On the choice of Salpeter mass function:
+- reference that says it is valid only for 0.4 < M/M_sun < 10 : http://www.cambody.org/notes/Cambody06_IMF.pdf - highly questionable, couldn't find confirmation
+- more on Salpeter IMF - http://jila.colorado.edu/~pja/astr3830/lecture06.pdf - expression for no. of galaxies btw M1 and M2 can be found here 
+- integrating, I find that for m_cut = 10 MSun for this distribution, actually nearly 96% of the stars are below that treshold, with 69.1% of the total mass, not sure if my calculation was correct
+- therefore I guess it is true that low-mass stars dominate the distribution
+
+1. Discussion 1: why split the particles in mass?
+    - read for N-body codes?
+    - need accurate positions for the high-mass stars as they influence the whole system more than the low-mass stars
+    - on the other hand, we don't need to 'waste' computational power on the low-mass stars due to their low influence,
+      and can hence use a less-accurate, but faster, tree-code
+      
+2. Discussion 2:
+    - bridge time step relative to the orbital timescale?
+    - orbital timescale = 'dynamical timescale' = time needed to cross the system? if so, t_dyn = sqrt(R_vir^3/(GM))
+      (see 2.2 from book), with the given values for r = 3 pc and N = 10^4 with the Plummer distribution, need to 
+      calculate M_tot, plug in the formula for t_dyn and probably use some fraction of that for the time step?
+      
+3. Discussion 3:
+    - check how much is the dynamical timescale, compared to the time resolution mentioned in the problem - 0.1 Myr
+    - what exactly does he refer to as 'initial conditions' in the 1st bullet for plotting? maybe the m_cut?
+    - what is half-mass and core radii? read!
+    - for plotting, need to do:
+        - firstly, as I understand it, 2 separate runs with all bodies in either the tree-code or the direct code, 
+        and compare results
+        - secondly, a series of runs with different splitting parameter
+            - save data: relative energy error (dE/E_tot) vs. initial conditions as a f-n of time (?)
+                         half-mass & core radii as a function of time
+                         final energy error (absolute or relative?) vs. splitting parameter
+                         wall-clock time vs. splitting parameter
+    - in total, need to save to a file, for each splitting parameter:
+         - half-mass
+         - core radius
+         - relative energy error; maybe save dE and E_tot separately for convenience
+         - wall-clock time
+         - initial energy? (initial conditions)
+
+4. Discussion 4: after we do the runs
