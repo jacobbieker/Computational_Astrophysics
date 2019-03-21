@@ -1,6 +1,6 @@
 #from amuse.lab import *
 from __future__ import division
-import numpy as np
+import numpy
 import time as whatever
 from amuse.lab import new_plummer_model
 from amuse.lab import Particles, units, nbody_system, constants
@@ -9,7 +9,7 @@ from amuse.ic.brokenimf import new_miller_scalo_mass_distribution
 from amuse.lab import new_powerlaw_mass_distribution
 from amuse.lab import ph4, BHTree, SeBa
 from amuse.couple import bridge
-from matplotlib import pyplot as plt
+import matplotlib.pyplot
 from amuse.ext.LagrangianRadii import LagrangianRadii
 from amuse.io import write_set_to_file
 import csv
@@ -18,6 +18,8 @@ import os
 """
     EDITS
 Changing the np and dplt to numpy and matplotlib.pyplot
+
+Stll need to change import time
     
 """
 
@@ -444,4 +446,5 @@ if __name__ in ("__main__"):
 	# Just to check if everything is given properly
     # print result
     print o.__dict__
+	numpy.random.seed(1337)
     main(**o.__dict__)
