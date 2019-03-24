@@ -1,7 +1,7 @@
 #from amuse.lab import *
 from __future__ import division
 import numpy
-import time as whatever
+import time
 from amuse.lab import new_plummer_model
 from amuse.lab import Particles, units, nbody_system, constants
 from amuse.ic.salpeter import new_salpeter_mass_distribution
@@ -30,7 +30,7 @@ else:
     os.makedirs('./results')
 
 
-initial_run_time = whatever.time()
+initial_run_time = time.time()
 
 # Creates a star cluster given the initial conditions N, M_min, M_Max, imf:
 # Plummer model = a self-consistent equilibrium solution to Poisson's eq-n,
@@ -161,14 +161,14 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	dE_list = []
 	ddE_list = []
 	Rhm = [] | units.parsec
-	time = 0 | units.Myr
+	current_time = 0 | units.Myr
 	time_se = 0 | units.Myr
 	cr = [] | units.AU
 	x_cluster = [] | units.AU
 	y_cluster = [] | units.AU
 	z_cluster = [] | units.AU
 	# The iteration starts here
-	while time < t_end:
+	while current_time < t_end:
 		light = starcluster[starcluster.mass<m_cut]
 		heavy = starcluster-light
 
@@ -211,14 +211,14 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
 		# print '\nVirial equilibrium', combined_gravity.kinetic_energy / combined_gravity.potential_energy
 		# Advancing the gravity and stellar evolution by a time step
-		time += tg_time_step
+		current_time += tg_time_step
 		time_se += tse_time_step
 		# Half step for stellar evolution
 		stellar_evolution.evolve_model(time_se)
 		channel_from_stellar_to_framework.copy()
 		channel_from_framework_to_combined_gravity.copy()
 
-		combined_gravity.evolve_model(time)
+		combined_gravity.evolve_model(current_time)
 		channel_from_combined_gravity_to_framework.copy()
 		# Another half step for stellar evolution
 		time_se += tse_time_step
@@ -240,7 +240,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 		# Append everything into lists to plot
 		cr.append(core_radius)
 		Rhm.append(R_halfmass)
-		time_list.append(time)
+		time_list.append(current_time)
 		dE_list.append(dE)
 		ddE_list.append(ddE)
 		x_cluster.append(starcluster.x)
@@ -249,8 +249,8 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
 
 		# Just a percentage to indicate the time needed to finish the iteration
-		percentage = int(round(100*time/t_end))
-		box = int(round(10*time/t_end))
+		percentage = int(round(100*current_time/t_end))
+		box = int(round(10*current_time/t_end))
 		print percentage, '%'
 		print '| ---------- |\n|', '-' * box, '|\n| ---------- |\n'
 
@@ -340,7 +340,7 @@ def main(N, theta, M_min, M_max, r,
 	# The '1' corresponds to the second time step of the evolution, it can be change to plot a scatter plot at any time
 	ax_scatter.scatter(xcluster[1,:], ycluster[1,:], zcluster[1,:])
 	matplotlib.pyplot.savefig('./results/cluster_scatter_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf'%(imf, method, N, m_cut.value_in(units.MSun), theta))
-	matplotlib..clf()
+	matplotlib.pyplot.clf()
 	matplotlib.pyplot.close()
 
 	# ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ def main(N, theta, M_min, M_max, r,
 
 
 
-	end_run_time = whatever.time()
+	end_run_time = time.time()
 	# Calculate the wall clock time
 	total_run_time = end_run_time - initial_run_time
 	print '\n\n\nTotal time elapsed', total_run_time, 'seconds'
