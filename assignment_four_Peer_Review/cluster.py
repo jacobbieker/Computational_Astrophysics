@@ -391,7 +391,7 @@ def main(N, theta, M_min, M_max, r,
 	# 	# graph._offsets3d = (x_anim, y_anim, z_anim)
 	# 	ax_anim.clear()
 	# 	ax_anim.scatter(x_anim, y_anim, z_anim)
-	#
+	#   return ax_anim
 	#
 	#
 	# # graph = ax_anim.plot(x_anim[0], y_anim[0], z_anim[0])
@@ -400,7 +400,9 @@ def main(N, theta, M_min, M_max, r,
 	# anim = animation.FuncAnimation(fig_anim, update, interval=100, frames=6, repeat=True, blit=False)
 	# plt.show()
 	#
-	# anim.save('./results/name.gif', writer='imagemagick')
+    # #anim.save('./results/name.gif', writer='imagemagick')
+    #  anim.save('./results/name.mp4', writer='imagemagick')
+
 
 	# ------------------------------------------------------------------------------------------------------------------------------------------------
 	# ------------------------------------------------------------------------------------------------------------------------------------------------
