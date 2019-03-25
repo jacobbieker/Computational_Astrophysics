@@ -32,14 +32,23 @@ else:
 
 initial_run_time = time.time()
 
-# Creates a star cluster given the initial conditions N, M_min, M_Max, imf:
-# Plummer model = a self-consistent equilibrium solution to Poisson's eq-n,
-# which creates stars of equal mass. We want our N stars to obey an IMF such
-# that M_min = 0.1 MSun and M_max = 100 MSun (see 1-24 in AMUSE book).
-# Several IMF choices implemented, interchangeable via imf parameter in option parser.
 
-# Three different options for an IMF, can be changedin the option parser
 def cluster(N, M_min, M_max, r, imf):
+	"""
+	Creates a star cluster given the initial conditions N, M_min, M_Max, imf:
+	Plummer model = a self-consistent equilibrium solution to Poisson's eq-n,
+	which creates stars of equal mass. We want our N stars to obey an IMF such
+	that M_min = 0.1 MSun and M_max = 100 MSun (see 1-24 in AMUSE book).
+	Several IMF choices implemented, interchangeable via imf parameter in option parser.
+
+	Three different options for an IMF, can be changedin the option parser
+	:param N: Number of stars
+	:param M_min: Min value for the mass distribution function, in MSun
+	:param M_max: Max value for the mass distribution function,
+	:param r: Virial Radius
+	:param imf: Mass function
+	:return:
+	"""
 	if imf == 'salpeter':
 		mZAMS = new_salpeter_mass_distribution(N, M_min.in_(units.MSun), M_max.in_(units.MSun))
 	elif imf == 'miller_scalo':
@@ -49,6 +58,7 @@ def cluster(N, M_min, M_max, r, imf):
 		mZAMS = new_powerlaw_mass_distribution(N, M_min.in_(units.MSun), M_max.in_(units.MSun), alpha = -2.0)
 	else:
 		print 'Wrong syntax on <imf>'
+		raise NotImplementedError
 
 	Mtot = mZAMS.sum()
 	# Converting acoording to our system, its total mass and radius
@@ -67,31 +77,37 @@ def cluster(N, M_min, M_max, r, imf):
 	return cluster
 
 
-# Function to calculate the half-mass radius of the cluster
 def halfmass_radius(starcluster):
-	# from amuse.ext.LagrangianRadii import LagrangianRadii
 	MassFraction = [0.5, 1.0]
 	R_halfmass = LagrangianRadii(starcluster, massf=MassFraction,verbose=True)[0]
-	# print R_halfmass.in_(units.parsec)
 	return R_halfmass
 
-# Function to calculate the dynamical timescale of a class of particles
 def dynamical_timescale(R_halfmass, starcluster):
 	return (R_halfmass**3/(constants.G*starcluster.mass.sum())).sqrt()
 
 
-# Function to evolve a star cluster gravitationally, taking the stars split
-# in two: 'light' for stars of mass below than a specified mass-cut and 'heavy'
-# for stars heavier than the mass-cut. The ligher masses are evolved using a
-# tree-code, whereas the heavier - using a direct N-body code.
-# Additionally, the code includes stellar evolution for each star in the cluster.
 def hybrid_gravity(N, starcluster, theta, m_cut, r,
 				   t_end, tg_time_step_frac, tse_time_step_frac, bridge_time_step_frac,
 				   imf, method):
-
-	# Objects of class Particles() to hold the stars ligher and heavier than the specified m_cut.
-	light = Particles()
-	heavy = Particles()
+	"""
+	Function to evolve a star cluster gravitationally, taking the stars split
+	in two: 'light' for stars of mass below than a specified mass-cut and 'heavy'
+	for stars heavier than the mass-cut. The ligher masses are evolved using a
+	tree-code, whereas the heavier - using a direct N-body code.
+	Additionally, the code includes stellar evolution for each star in the cluster.
+	:param N: Number of Stars
+	:param starcluster: Star Cluster from cluster()
+	:param theta: Opening Angle
+	:param m_cut: Mass cut
+	:param r: Virial Radius
+	:param t_end: End time
+	:param tg_time_step_frac: Time step fraction for gravity code
+	:param tse_time_step_frac: Stellar Evolution time step fraction
+	:param bridge_time_step_frac: Bridge time step fraction
+	:param imf: Mass Function
+	:param method: Method of splitting particles
+	:return:
+	"""
 
 	# Put particles with mass below m_cut in light(), and heavier in heavy().
 	light = starcluster[starcluster.mass<m_cut]
@@ -99,7 +115,6 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
 	M_tot = light.mass.sum() + heavy.mass.sum()
 	convert = nbody_system.nbody_to_si(M_tot, r)
-
 
 	# Introducing a flag system so the code can run in three different schemes
 	# that can be changed in the option parser by changing the "scheme" option.
@@ -117,7 +132,6 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	if light_flag:
 		# Barnes-Hut tree model for the "light" stars
 		light_gravity = BHTree(convert)
-		# print light_gravity.parameters
 		light_gravity.parameters.opening_angle = theta
 		light_gravity.parameters.timestep = 0.5*light_gravity.parameters.timestep
 		light_gravity.particles.add_particles(light)
@@ -153,9 +167,6 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	# Calculating the initial energy of the system
 	E_comb_gr_init = combined_gravity.kinetic_energy + combined_gravity.potential_energy
 	E_comb_gr = E_comb_gr_init
-	# print 'Initial virial ratio:', combined_gravity.kinetic_energy / combined_gravity.potential_energy
-
-
 
 	time_list = [] | units.Myr
 	dE_list = []
@@ -169,14 +180,11 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	z_cluster = [] | units.AU
 	# The iteration starts here
 	while current_time < t_end:
-		light = starcluster[starcluster.mass<m_cut]
-		heavy = starcluster-light
 
 		MassFraction = [0.5, 1.0]
 		# Halfmass radius calculation
 		R_halfmass = LagrangianRadii(combined_gravity.particles, massf=MassFraction,verbose=True)[0]      # Both the Halfmass radius and the dynamical time scale of the cluster
 		# Calculating the dynamical time scale of the cluster												# change over time due to the position and mass of the stars changing
-		# t_dyn_cluster = (R_halfmass**3/(constants.G*starcluster.mass.sum())).sqrt()
 		t_dyn_cluster = dynamical_timescale(R_halfmass, starcluster)
 
 #
@@ -209,7 +217,6 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
 
 
-		# print '\nVirial equilibrium', combined_gravity.kinetic_energy / combined_gravity.potential_energy
 		# Advancing the gravity and stellar evolution by a time step
 		current_time += tg_time_step
 		time_se += tse_time_step
@@ -231,8 +238,6 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 		dE = abs((E_comb_gr - E_comb_gr_init) / E_comb_gr_init)
 		# Calculate the dE in each cycle
 		ddE = abs((E_comb_gr - E_comb_gr_prev) / E_comb_gr)
-		# print 'Time=', time.in_(units.Myr), 'dE=', dE, 'ddE=', ddE
-
 
 		# Calculate the core radius
 		pos,core_radius,coredens = combined_gravity.particles.densitycentre_coreradius_coredens(convert)
@@ -291,21 +296,39 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 def main(N, theta, M_min, M_max, r,
 		 t_end, tg_time_step_frac, tse_time_step_frac, bridge_time_step_frac,
 		 imf, code, m_cut):
-    # Splitting parameter:
-    # code = 0 uses specified m_cut for the particles to go to the hybrid code;
-    # code = 1 sets m_cut = M_min for all particles to go to the N-body code;
-    # code = 2 sets m_cut = M_max for all particles to go to the tree code.
-	# scheme = code | can be changed in the option parser
+	"""
+	Splitting parameter:
+    code = 0 uses specified m_cut for the particles to go to the hybrid code;
+    code = 1 sets m_cut = M_min for all particles to go to the N-body code;
+    code = 2 sets m_cut = M_max for all particles to go to the tree code.
+	scheme = code | can be changed in the option parser
+	:param N: Number of stars
+	:param theta: Opening Angle for Tree code
+	:param M_min: Min mass for IMF
+	:param M_max: Max mass for IMF
+	:param r: Virial Radius
+	:param t_end: End time
+	:param tg_time_step_frac: Gravity time step fraction
+	:param tse_time_step_frac: Stellar evolution time step fraction
+	:param bridge_time_step_frac: Bridge time step fraction
+	:param imf: Mass function to generate cluster
+	:param code: Type of code to run
+	:param m_cut: Mass cut parameter
+	:return:
+	"""
 	if code == 0:
 		method = 'hybrid'
 
-	if code == 1:
+	elif code == 1:
 		m_cut = M_min
 		method = 'nbody'
 
-	if code == 2:
+	elif code == 2:
 		m_cut = M_max
 		method = 'tree'
+
+	else:
+		raise NotImplementedError
 
 
 	# The important part
@@ -398,8 +421,11 @@ def main(N, theta, M_min, M_max, r,
 		writer.writerow(things_to_print)
 
 
-# Introducing the option parser so every parameter can be altered through the terminal
 def new_option_parser():
+	"""
+	# Introducing the option parser so every parameter can be altered through the terminal
+	:return:
+	"""
 	from amuse.units.optparse import OptionParser
 	result = OptionParser()
 	result.add_option("-N", dest="N", type="int",
