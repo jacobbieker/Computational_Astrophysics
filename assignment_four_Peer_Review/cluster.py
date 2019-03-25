@@ -18,8 +18,6 @@ import os
 """
     EDITS
 Changing the np and dplt to numpy and matplotlib.pyplot
-
-Stll need to change import time
     
 """
 
@@ -88,7 +86,7 @@ def dynamical_timescale(R_halfmass, starcluster):
 
 def hybrid_gravity(N, starcluster, theta, m_cut, r,
 				   t_end, tg_time_step_frac, tse_time_step_frac, bridge_time_step_frac,
-				   imf, method):
+				   imf, method, workers):
 	"""
 	Function to evolve a star cluster gravitationally, taking the stars split
 	in two: 'light' for stars of mass below than a specified mass-cut and 'heavy'
@@ -106,6 +104,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	:param bridge_time_step_frac: Bridge time step fraction
 	:param imf: Mass Function
 	:param method: Method of splitting particles
+	:param workers: Number of worker threads for each code
 	:return:
 	"""
 
@@ -126,12 +125,12 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	if len(heavy) == 0: heavy_flag = False
 
 	#  Stellar evolution model introduced and used in all three schemes
-	stellar_evolution = SeBa()
+	stellar_evolution = SeBa(number_of_workers=workers)
 
 	#  In hybrid and tree schemes, the tree model for the 'light' stars is introduced
 	if light_flag:
 		# Barnes-Hut tree model for the "light" stars
-		light_gravity = BHTree(convert)
+		light_gravity = BHTree(convert, number_of_workers=workers)
 		light_gravity.parameters.opening_angle = theta
 		light_gravity.parameters.timestep = 0.5*light_gravity.parameters.timestep
 		light_gravity.particles.add_particles(light)
@@ -142,7 +141,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 	#  In hybrid and nbody schemes, the nbody model for the 'heavy' stars is introduced
 	if heavy_flag:
 		# Nbody model for "heavy" stars
-		heavy_gravity = ph4(convert)
+		heavy_gravity = ph4(convert, number_of_workers=workers)
 		heavy_gravity.particles.add_particles(heavy)
 		# Adding the 'heavy' particles to SE
 		stellar_evolution.particles.add_particle(heavy)
@@ -295,7 +294,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 # The main funtcion wrapping up everything
 def main(N, theta, M_min, M_max, r,
 		 t_end, tg_time_step_frac, tse_time_step_frac, bridge_time_step_frac,
-		 imf, code, m_cut):
+		 imf, code, m_cut, workers):
 	"""
 	Splitting parameter:
     code = 0 uses specified m_cut for the particles to go to the hybrid code;
@@ -314,6 +313,7 @@ def main(N, theta, M_min, M_max, r,
 	:param imf: Mass function to generate cluster
 	:param code: Type of code to run
 	:param m_cut: Mass cut parameter
+	:param workers: Number of workers to use for the codes
 	:return:
 	"""
 	if code == 0:
@@ -337,7 +337,7 @@ def main(N, theta, M_min, M_max, r,
 	starcluster = cluster(N, M_min, M_max, r, imf)
 	N, final_energy_error, theta, x_cluster, y_cluster, z_cluster = hybrid_gravity(N, starcluster,theta, m_cut, r,
 																				   t_end, tg_time_step_frac, tse_time_step_frac, bridge_time_step_frac,
-																				   imf, method)
+																				   imf, method, workers)
 	# ------------------------------------------------------------------------------------------------------------------------------------------------
 	# ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -464,6 +464,9 @@ def new_option_parser():
 	result.add_option("--m_cut", unit = units.MSun, dest="m_cut", type="float",
 					  default = 10 | units.MSun,
 					  help="Mass splitting parameter [%default]")
+	result.add_option("--workers", dest="workers", type="int",
+					  default = 1,
+					  help="Number of Worker threads to do for each code [%default]")
 
 	return result
 # Running the whole code with the parameters declared in the option parser
