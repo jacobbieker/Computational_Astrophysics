@@ -184,7 +184,7 @@ def hybrid_gravity(N, starcluster, theta, m_cut, r,
 
         MassFraction = [0.5, 1.0]
         # Halfmass radius calculation
-        R_halfmass = LagrangianRadii(combined_gravity.particles, massf=MassFraction,verbose=True)[0]      # Both the Halfmass radius and the dynamical time scale of the cluster
+        R_halfmass = LagrangianRadii(combined_gravity.particles, massf=MassFraction,verbose=False)[0]      # Both the Halfmass radius and the dynamical time scale of the cluster
         # Calculating the dynamical time scale of the cluster												# change over time due to the position and mass of the stars changing
         t_dyn_cluster = dynamical_timescale(starcluster)
 
@@ -309,8 +309,7 @@ def create_animation(xcluster, ycluster, zcluster):
         graph._offsets3d = (x_anim[num], y_anim[num], z_anim[num])
         return graph
     graph = ax_anim.scatter(x_anim[0], y_anim[0], z_anim[0])
-    num_timesteps = len(x_anim)
-    anim = matplotlib.animation.FuncAnimation(fig_anim, update, num_timesteps, interval=100, frames=6, repeat=True, blit=True)
+    anim = matplotlib.animation.FuncAnimation(fig_anim, update, interval=100, frames=6, repeat=True, blit=True)
     matplotlib.pyplot.show()
     anim.save('./results/animation.mp4', writer='ffmpeg')
 
