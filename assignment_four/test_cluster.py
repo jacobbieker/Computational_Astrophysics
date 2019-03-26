@@ -46,9 +46,9 @@ def test_too_small_cluster_distribution():
 
 
 def test_large_cluster_distribution():
-    large_cluster = cluster.cluster(100, 0.1 | units.MSun, 100 | units.MSun, 5 | units.parsec, "otherexp")
+    large_cluster = cluster.cluster(100000, 0.1 | units.MSun, 100 | units.MSun, 5 | units.parsec, "otherexp")
     assert numpy.isclose(large_cluster.virial_radius().value_in(units.parsec), 5.0)
-    assert len(large_cluster) == 100
+    assert len(large_cluster) == 100000
     assert numpy.min(large_cluster.mass.value_in(units.MSun)) >= 0.1
     assert numpy.min(large_cluster.mass.value_in(units.MSun)) <= 100.
 

@@ -10,3 +10,4 @@ Files included:
 4. results folder - contains all graphs
 5. optionparser.py - draft of option parser arguments
 6. test_cluster.py - script for the nosetest testing, to run, run 'mpiexec nosetests test_cluster.py'
+7. 'Assignment_4_Peer_Review.pdf' contains the peer review of the code.
