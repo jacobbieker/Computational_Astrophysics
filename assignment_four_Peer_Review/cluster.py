@@ -428,8 +428,8 @@ def main(N,
 
     things_to_print = {'Run Time': total_run_time | units.s, 'dE': final_energy_error, 'Mass Cut': m_cut}
     # Print the Wall clock time, the total energy error and the mass cut to a file for later use
-    with open('./results/cluster_%s_%s_N=%i_mcut=%.1f_theta=%.1f.csv' % (
-    imf, method, N, m_cut.value_in(units.MSun), theta), 'wb') as csvfile:
+    with open('./results/cluster_%s_%s_N=%i_mcut=%.1f_theta=%.1f.csv' %
+              (imf, method, N, m_cut.value_in(units.MSun), theta), 'wb') as csvfile:
         writer = csv.DictWriter(csvfile, things_to_print.keys())
         writer.writeheader()
         writer.writerow(things_to_print)
