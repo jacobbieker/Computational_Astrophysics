@@ -82,7 +82,7 @@ def cluster(N,
 
 def halfmass_radius(starcluster):
     MassFraction = [0.5, 1.0]
-    R_halfmass = LagrangianRadii(starcluster, massf=MassFraction, verbose=True)[0]
+    R_halfmass = LagrangianRadii(starcluster, massf=MassFraction, verbose=False)[0]
     return R_halfmass
 
 
@@ -321,13 +321,17 @@ def create_animation(xcluster,
     z_anim = numpy.array(z_anim)
     fig_anim = matplotlib.pyplot.figure()
     ax_anim = fig_anim.add_subplot(111, projection='3d')
+    ax_anim.set_zlabel("Z [meters]")
+    ax_anim.set_ylabel("Y [meters]")
+    ax_anim.set_xlabel("X [meters]")
 
     def update(num):
         graph._offsets3d = (x_anim[num], y_anim[num], z_anim[num])
         return graph
 
     graph = ax_anim.scatter(x_anim[0], y_anim[0], z_anim[0])
-    anim = matplotlib.animation.FuncAnimation(fig_anim, update, interval=100, frames=6, repeat=True, blit=True)
+    num_timesteps = len(x_anim)
+    anim = matplotlib.animation.FuncAnimation(fig_anim, update, num_timesteps, interval=50, repeat=True, blit=False)
     matplotlib.pyplot.show()
     anim.save('./results/animation.mp4', writer='ffmpeg')
 
@@ -411,8 +415,8 @@ def main(N,
     zcluster = z_cluster.value_in(units.AU)
     # The '1' corresponds to the second time step of the evolution, it can be change to plot a scatter plot at any time
     ax_scatter.scatter(xcluster[1, :], ycluster[1, :], zcluster[1, :])
-    matplotlib.pyplot.savefig('./results/cluster_scatter_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf' % (
-    imf, method, N, m_cut.value_in(units.MSun), theta))
+    matplotlib.pyplot.savefig('./results/cluster_scatter_%s_%s_N=%i_mcut=%.1f_theta=%.1f.pdf' %
+                              (imf, method, N, m_cut.value_in(units.MSun), theta))
     matplotlib.pyplot.clf()
     matplotlib.pyplot.close()
 
@@ -477,7 +481,7 @@ def new_option_parser():
                       help="Mass splitting parameter [%default]")
     result.add_option("--workers", dest="workers", type="int",
                       default=1,
-                      help="Number of Worker threads to do for each code [%default]")
+                      help="Number of Worker threads to use for each code [%default]")
 
     return result
 
