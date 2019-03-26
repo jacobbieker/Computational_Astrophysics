@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy
 import cluster
+from amuse.lab import Particles, nbody_system, constants
 from amuse.units import units
 from nose.tools import *
 
@@ -44,7 +45,6 @@ def test_too_small_cluster_distribution():
     cluster.cluster(1, 0.1, 100, 3, "otherexp")
 
 
-@raises(NotImplementedError)
 def test_large_cluster_distribution():
     large_cluster = cluster.cluster(1000000, 0.1, 100, 5, "otherexp")
     assert numpy.isclose(large_cluster.virial_radius().value_in(units.parsec), 5.0)
