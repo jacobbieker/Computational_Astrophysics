@@ -17,11 +17,6 @@ from amuse.ext.LagrangianRadii import LagrangianRadii
 import csv
 import os
 
-"""
-    EDITS
-Changing the np and dplt to numpy and matplotlib.pyplot
-    
-"""
 
 # Create a directory to store the results, if it exists, we pass
 if os.path.exists('./results'):
