@@ -310,9 +310,9 @@ def create_animation(xcluster, ycluster, zcluster):
         return graph
     graph = ax_anim.scatter(x_anim[0], y_anim[0], z_anim[0])
     num_timesteps = len(x_anim)
-    anim = matplotlib.animation.FuncAnimation(fig_anim, update, num_timesteps, interval=100, frames=6, repeat=True, blit=False)
+    anim = matplotlib.animation.FuncAnimation(fig_anim, update, num_timesteps, interval=100, frames=6, repeat=True, blit=True)
     matplotlib.pyplot.show()
-    anim.save('./results/animation.mp4', writer='ffmpeg')
+    anim.save('./results/animation_blit.mp4', writer='ffmpeg')
 
 
 # The main funtcion wrapping up everything
